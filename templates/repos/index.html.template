@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html>
+  <head><title>Doppelganger</title></head>
+  <body>
+    <h1>Repositories</h1>
+    <ul>
+      {{ range . }}
+        <li>{{ .FullName }}</li>
+      {{ else }}
+        No repositories found.
+      {{ end }}
+    </ul>
+  </body>
+</html>

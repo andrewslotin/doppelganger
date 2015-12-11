@@ -28,6 +28,10 @@ func main() {
 		os.Exit(-1)
 	}
 
+	githubClient := newGithubClient(token)
+
+	http.Handle("/", NewReposHandler(githubClient))
+
 	*addr = fmt.Sprintf("%s:%d", *addr, *port)
 	log.Printf("doppelganger is listening on %s", *addr)
 	http.ListenAndServe(*addr, nil)
