@@ -32,3 +32,12 @@ func main() {
 	log.Printf("doppelganger is listening on %s", *addr)
 	http.ListenAndServe(*addr, nil)
 }
+
+func newGithubClient(token string) *github.Client {
+	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
+		AccessToken: token,
+	})
+	oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+
+	return github.NewClient(oauthClient)
+}
