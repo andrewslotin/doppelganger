@@ -25,8 +25,18 @@ func NewRepoClient(repositoryService git.RepositoryService) *RepoHandler {
 }
 
 func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	startTime := time.Now()
 	repoName := handler.fetchRepoFromRequest(req)
+
+	switch req.Method {
+	case "GET":
+		handler.Show(w, repoName)
+	default:
+		http.Error(w, "Not found", http.StatusNotFound)
+	}
+}
+
+func (handler *RepoHandler) Show(w http.ResponseWriter, repoName string) {
+	startTime := time.Now()
 
 	switch repo, err := handler.repositories.Get(repoName); err {
 	case nil:
