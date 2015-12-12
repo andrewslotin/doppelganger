@@ -26,9 +26,9 @@ func NewRepoClient(client *github.Client) *RepoHandler {
 
 func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
-	repoName := handler.fetchRepoFromRequest(req)
+	repoOwner, repoName := ParseRepositoryName(handler.fetchRepoFromRequest(req))
 
-	repo, response, err := handler.client.Repositories.Get(ParseRepositoryName(repoName))
+	repo, response, err := handler.client.Repositories.Get(repoOwner, repoName)
 	if err == nil {
 		err = github.CheckResponse(response.Response)
 	}
@@ -39,13 +39,33 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 			return
 		}
 
-		log.Printf("failed to fetch %s (%s)", repoName, err)
+		log.Printf("failed to fetch %s/%s (%s)", repoOwner, repoName, err)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
 
-	repoTemplate.Execute(w, repo)
-	log.Printf("rendered repo/show %s [%s]", repoName, time.Since(startTime))
+	masterBranch, _, err := handler.client.Repositories.GetBranch(repoOwner, repoName, *repo.MasterBranch)
+	if err != nil {
+		log.Printf("failed to fetch branch %s of %s (%s)", *repo.MasterBranch, *repo.FullName, err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	lastCommit, _, err := handler.client.Repositories.GetCommit(repoOwner, repoName, *masterBranch.Commit.SHA)
+	if err != nil {
+		log.Printf("failed to fetch latest commit in %s of %s (%s)", *masterBranch.Name, *repo.FullName, err)
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
+	}
+
+	repoTemplate.Execute(w, struct {
+		Repo       *github.Repository
+		LastCommit *github.RepositoryCommit
+	}{
+		Repo:       repo,
+		LastCommit: lastCommit,
+	})
+	log.Printf("rendered repo/show %s with latest commit from %q [%s]", *repo.FullName, *masterBranch.Name, time.Since(startTime))
 }
 
 func (handler *RepoHandler) fetchRepoFromRequest(req *http.Request) string {

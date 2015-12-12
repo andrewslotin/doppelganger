@@ -1,28 +1,17 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>{{ .FullName }}</title>
+    <title>{{ .Repo.FullName }}</title>
   </head>
   <body>
-    <h1>{{ .FullName }}</h1>
+    <h1>{{ .Repo.FullName }}</h1>
     <div>
-      <em>{{ .Description }}</em>
+      <em>{{ .Repo.Description }}</em>
     </div>
     <div>
-      <a href="{{ .HTMLURL }}">View on GitHub</a>
+      <a href="{{ .Repo.HTMLURL }}">View on GitHub</a>
     </div>
-    <dl>
-      <dt>Last push at:</dt>
-      <dd>{{ .PushedAt.Format "2006-01-02 15:04 MST" }}</dd>
 
-      <dt>Private:</dt>
-      <dd>
-        {{ if .Private }}
-          yes
-        {{ else }}
-          no
-        {{ end }}
-      </dd>
-    </dl>
+    <p>Latest master update {{ .LastCommit.SHA }} "{{ .LastCommit.Message }}"  by {{ .LastCommit.Author.Name }} on {{ .LastCommit.Author.Date.Format "2006-01-02 15:04 MST" }}</p>
   </body>
 </html>
