@@ -26,6 +26,11 @@ func NewReposHandler(client *github.Client) *ReposHandler {
 func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
 
+	if repoName := req.FormValue("repo"); repoName != "" {
+		NewRepoClient(handler.client).ServeHTTP(w, req)
+		return
+	}
+
 	repos, err := handler.listRepos()
 	if err != nil {
 		log.Printf("failed to get repos (%s) %s", err, req)

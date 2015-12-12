@@ -5,7 +5,7 @@
     <h1>Repositories</h1>
     <ul>
       {{ range . }}
-        <li>{{ .FullName }}</li>
+        <li><a href="?repo={{ .FullName | urlquery }}">{{ .FullName }}</a></li>
       {{ else }}
         No repositories found.
       {{ end }}

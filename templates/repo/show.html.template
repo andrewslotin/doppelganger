@@ -5,7 +5,12 @@
   </head>
   <body>
     <h1>{{ .FullName }}</h1>
-    <em>{{ .Description }}</em>
+    <div>
+      <em>{{ .Description }}</em>
+    </div>
+    <div>
+      <a href="{{ .HTMLURL }}">View on GitHub</a>
+    </div>
     <dl>
       <dt>Last push at:</dt>
       <dd>{{ .PushedAt.Format "2006-01-02 15:04 MST" }}</dd>
