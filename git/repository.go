@@ -1,4 +1,4 @@
-package github
+package git
 
 type Repository struct {
 	FullName    string

@@ -1,4 +1,4 @@
-package github
+package git
 
 type RepositoryService interface {
 	All() ([]*Repository, error)

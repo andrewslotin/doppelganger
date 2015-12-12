@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andrewslotin/doppelganger/github"
+	"github.com/andrewslotin/doppelganger/git"
 )
 
 var (
@@ -15,10 +15,10 @@ var (
 )
 
 type RepoHandler struct {
-	repositories github.RepositoryService
+	repositories git.RepositoryService
 }
 
-func NewRepoClient(repositoryService github.RepositoryService) *RepoHandler {
+func NewRepoClient(repositoryService git.RepositoryService) *RepoHandler {
 	return &RepoHandler{
 		repositories: repositoryService,
 	}
@@ -32,7 +32,7 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	case nil:
 		repoTemplate.Execute(w, repo)
 		log.Printf("rendered repo/show %s with latest commit from %q [%s]", repo.FullName, repo.Master, time.Since(startTime))
-	case github.ErrorNotFound:
+	case git.ErrorNotFound:
 		http.Error(w, fmt.Sprintf("No such repository %q", repoName), http.StatusNotFound)
 	default:
 		log.Printf("failed to fetch %s (%s)", repoName, err)

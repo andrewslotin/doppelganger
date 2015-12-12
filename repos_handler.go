@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/andrewslotin/doppelganger/github"
+	"github.com/andrewslotin/doppelganger/git"
 )
 
 var (
@@ -14,10 +14,10 @@ var (
 )
 
 type ReposHandler struct {
-	repositories github.RepositoryService
+	repositories git.RepositoryService
 }
 
-func NewReposHandler(repositoryService github.RepositoryService) *ReposHandler {
+func NewReposHandler(repositoryService git.RepositoryService) *ReposHandler {
 	return &ReposHandler{
 		repositories: repositoryService,
 	}

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/andrewslotin/doppelganger/github"
+	"github.com/andrewslotin/doppelganger/git"
 )
 
 var (
@@ -27,7 +27,7 @@ func main() {
 		os.Exit(-1)
 	}
 
-	repositoryService := github.NewGithubRepositories(token)
+	repositoryService := git.NewGithubRepositories(token)
 	http.Handle("/", NewReposHandler(repositoryService))
 
 	*addr = fmt.Sprintf("%s:%d", *addr, *port)
