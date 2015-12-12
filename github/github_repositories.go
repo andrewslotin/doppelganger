@@ -65,7 +65,7 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 	repoOwner, repoName := ParseRepositoryName(fullName)
 
-	repo, response, err := service.client.Repositories.Get(repoOwner, repoName)
+	githubRepo, response, err := service.client.Repositories.Get(repoOwner, repoName)
 	if err == nil {
 		err = api.CheckResponse(response.Response)
 	}
@@ -78,7 +78,7 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 		return nil, err
 	}
 
-	masterBranch, _, err := service.client.Repositories.GetBranch(repoOwner, repoName, *repo.MasterBranch)
+	masterBranch, _, err := service.client.Repositories.GetBranch(repoOwner, repoName, *githubRepo.MasterBranch)
 	if err != nil {
 		return nil, err
 	}
@@ -88,22 +88,32 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 		return nil, err
 	}
 
-	return &Repository{
-		FullName:    *repo.FullName,
-		Description: *repo.Description,
-		Master:      *repo.MasterBranch,
-		HTMLURL:     *repo.HTMLURL,
-		LatestMasterCommit: &Commit{
-			SHA:     *lastCommit.SHA,
-			Message: *lastCommit.Message,
-			Author:  *lastCommit.Author.Name,
-			Date:    *lastCommit.Author.Date,
-		},
-	}, nil
+	repo := repositoryFromGithub(githubRepo)
+	repo.LatestMasterCommit = commitFromGithub(lastCommit)
+
+	return repo, nil
 }
 
 // ParseRepositoryName returns owner and project name for given GitHub repository.
 func ParseRepositoryName(fullName string) (string, string) {
 	fields := strings.SplitN(fullName, "/", 2)
 	return fields[0], fields[1]
+}
+
+func repositoryFromGithub(githubRepo *api.Repository) *Repository {
+	return &Repository{
+		FullName:    *githubRepo.FullName,
+		Description: *githubRepo.Description,
+		Master:      *githubRepo.MasterBranch,
+		HTMLURL:     *githubRepo.HTMLURL,
+	}
+}
+
+func commitFromGithub(githubCommit *api.Commit) *Commit {
+	return &Commit{
+		SHA:     *githubCommit.SHA,
+		Message: *githubCommit.Message,
+		Author:  *githubCommit.Author.Name,
+		Date:    *githubCommit.Author.Date,
+	}
 }
