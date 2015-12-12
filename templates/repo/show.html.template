@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ .FullName }}</title>
+  </head>
+  <body>
+    <h1>{{ .FullName }}</h1>
+    <em>{{ .Description }}</em>
+    <dl>
+      <dt>Last push at:</dt>
+      <dd>{{ .PushedAt.Format "2006-01-02 15:04 MST" }}</dd>
+
+      <dt>Private:</dt>
+      <dd>
+        {{ if .Private }}
+          yes
+        {{ else }}
+          no
+        {{ end }}
+      </dd>
+    </dl>
+  </body>
+</html>

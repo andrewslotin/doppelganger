@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/google/go-github/github"
 	"golang.org/x/oauth2"
@@ -44,4 +45,10 @@ func newGithubClient(token string) *github.Client {
 	oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
 
 	return github.NewClient(oauthClient)
+}
+
+// ParseRepositoryName returns owner and project name for given GitHub repository.
+func ParseRepositoryName(fullName string) (string, string) {
+	fields := strings.SplitN(fullName, "/", 2)
+	return fields[0], fields[1]
 }
