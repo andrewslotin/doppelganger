@@ -6,10 +6,8 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
 
-	"github.com/google/go-github/github"
-	"golang.org/x/oauth2"
+	"github.com/andrewslotin/doppelganger/github"
 )
 
 var (
@@ -29,26 +27,10 @@ func main() {
 		os.Exit(-1)
 	}
 
-	githubClient := newGithubClient(token)
-
-	http.Handle("/", NewReposHandler(githubClient))
+	repositoryService := github.NewGithubRepositories(token)
+	http.Handle("/", NewReposHandler(repositoryService))
 
 	*addr = fmt.Sprintf("%s:%d", *addr, *port)
 	log.Printf("doppelganger is listening on %s", *addr)
 	http.ListenAndServe(*addr, nil)
-}
-
-func newGithubClient(token string) *github.Client {
-	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
-		AccessToken: token,
-	})
-	oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
-
-	return github.NewClient(oauthClient)
-}
-
-// ParseRepositoryName returns owner and project name for given GitHub repository.
-func ParseRepositoryName(fullName string) (string, string) {
-	fields := strings.SplitN(fullName, "/", 2)
-	return fields[0], fields[1]
 }

@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/google/go-github/github"
+	"github.com/andrewslotin/doppelganger/github"
 )
 
 var (
@@ -14,12 +14,12 @@ var (
 )
 
 type ReposHandler struct {
-	client *github.Client
+	repositories github.RepositoryService
 }
 
-func NewReposHandler(client *github.Client) *ReposHandler {
+func NewReposHandler(repositoryService github.RepositoryService) *ReposHandler {
 	return &ReposHandler{
-		client: client,
+		repositories: repositoryService,
 	}
 }
 
@@ -27,11 +27,11 @@ func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)
 	startTime := time.Now()
 
 	if repoName := req.FormValue("repo"); repoName != "" {
-		NewRepoClient(handler.client).ServeHTTP(w, req)
+		NewRepoClient(handler.repositories).ServeHTTP(w, req)
 		return
 	}
 
-	repos, err := handler.listRepos()
+	repos, err := handler.repositories.All()
 	if err != nil {
 		log.Printf("failed to get repos (%s) %s", err, req)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -40,29 +40,4 @@ func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)
 
 	reposTemplate.Execute(w, repos)
 	log.Printf("rendered repos/index with %d entries [%s]", len(repos), time.Since(startTime))
-}
-
-func (handler *ReposHandler) listRepos() ([]github.Repository, error) {
-	opts := &github.RepositoryListOptions{
-		ListOptions: github.ListOptions{
-			PerPage: 50,
-		},
-	}
-
-	allRepos := make([]github.Repository, 0, 50)
-	for {
-		repos, response, err := handler.client.Repositories.List("", opts)
-		if err != nil {
-			return nil, err
-		}
-
-		allRepos = append(allRepos, repos...)
-		if response.NextPage == 0 {
-			break
-		}
-
-		opts.ListOptions.Page = response.NextPage
-	}
-
-	return allRepos, nil
 }
