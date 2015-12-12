@@ -14,6 +14,9 @@
       </div>
     {{ end }}
 
-    <p>Latest master update {{ .LatestMasterCommit.SHA }} "{{ .LatestMasterCommit.Message }}"  by {{ .LatestMasterCommit.Author }} on {{ .LatestMasterCommit.Date.Format "2006-01-02 15:04 MST" }}</p>
+    <h2>Latest master update</h2>
+    <blockquote>{{ .LatestMasterCommit.Message }}</blockquote>
+    <em>{{ .LatestMasterCommit.Author }} on {{ .LatestMasterCommit.Date.Format "2006-01-02 15:04 MST" }}</em>
+    <p>Commit SHA: <code>{{ .LatestMasterCommit.SHA }}</code></p>
   </body>
 </html>
