@@ -8,3 +8,7 @@ type Repository struct {
 
 	LatestMasterCommit *Commit
 }
+
+func (repo *Repository) Mirrored() bool {
+	return repo.HTMLURL == ""
+}
