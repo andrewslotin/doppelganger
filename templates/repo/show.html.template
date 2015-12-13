@@ -5,12 +5,20 @@
   </head>
   <body>
     <h1>{{ .FullName }}</h1>
-    {{ if .Mirrored }}
-      <div><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></div>
-    {{ else }}
+    {{ if .Description }}
       <div><em>{{ .Description }}</em></div>
-      <div><a href="{{ .HTMLURL }}">View on GitHub</a></div>
     {{ end }}
+
+    <div>
+      <ul>
+        {{ if .Mirrored }}
+          <li><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
+        {{ else }}
+          <li><a href="{{ .HTMLURL }}">View on GitHub</a></li>
+          <li><a href="/mirror?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
+        {{ end }}
+      </ul>
+    </div>
 
     <h2>Latest master update</h2>
     <blockquote>{{ .LatestMasterCommit.Message }}</blockquote>
