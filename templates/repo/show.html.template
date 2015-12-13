@@ -5,13 +5,11 @@
   </head>
   <body>
     <h1>{{ .FullName }}</h1>
-    <div>
-      <em>{{ .Description }}</em>
-    </div>
-    {{ if .HTMLURL }}
-      <div>
-        <a href="{{ .HTMLURL }}">View on GitHub</a>
-      </div>
+    {{ if .Mirrored }}
+      <div><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></div>
+    {{ else }}
+      <div><em>{{ .Description }}</em></div>
+      <div><a href="{{ .HTMLURL }}">View on GitHub</a></div>
     {{ end }}
 
     <h2>Latest master update</h2>
