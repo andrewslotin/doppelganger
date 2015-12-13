@@ -113,7 +113,7 @@ func commitFromGithub(githubCommit *api.Commit) *Commit {
 	return &Commit{
 		SHA:     *githubCommit.SHA,
 		Message: *githubCommit.Message,
-		Author:  *githubCommit.Author.Name,
-		Date:    *githubCommit.Author.Date,
+		Author:  *githubCommit.Committer.Name,
+		Date:    *githubCommit.Committer.Date,
 	}
 }
