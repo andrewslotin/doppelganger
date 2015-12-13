@@ -6,13 +6,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/andrewslotin/doppelganger/git"
 )
 
 var (
-	addr = flag.String("addr", "", "Listen address.")
-	port = flag.Int("port", 8081, "Listen port.")
+	addr      = flag.String("addr", "", "Listen address")
+	port      = flag.Int("port", 8081, "Listen port")
+	mirrorDir = flag.String("mirror", filepath.Join(os.Getenv("GOPATH"), "src", "github.com"), "Mirrored repositories directory")
 )
 
 func main() {
@@ -29,6 +31,9 @@ func main() {
 
 	repositoryService := git.NewGithubRepositories(token)
 	http.Handle("/", NewReposHandler(repositoryService))
+
+	mirroredRepositoryService := git.NewMirroredRepositories(*mirrorDir)
+	http.Handle("/mirror", NewReposHandler(mirroredRepositoryService))
 
 	*addr = fmt.Sprintf("%s:%d", *addr, *port)
 	log.Printf("doppelganger is listening on %s", *addr)
