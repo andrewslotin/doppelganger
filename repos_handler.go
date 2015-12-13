@@ -38,6 +38,9 @@ func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	reposTemplate.Execute(w, repos)
-	log.Printf("rendered repos/index with %d entries [%s]", len(repos), time.Since(startTime))
+	if err := reposTemplate.Execute(w, repos); err != nil {
+		log.Printf("failse to render repos/index with %d entries (%s)", len(repos), err)
+	} else {
+		log.Printf("rendered repos/index with %d entries [%s]", len(repos), time.Since(startTime))
+	}
 }

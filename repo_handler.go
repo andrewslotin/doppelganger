@@ -40,8 +40,11 @@ func (handler *RepoHandler) Show(w http.ResponseWriter, repoName string) {
 
 	switch repo, err := handler.repositories.Get(repoName); err {
 	case nil:
-		repoTemplate.Execute(w, repo)
-		log.Printf("rendered repo/show %s with latest commit from %q [%s]", repo.FullName, repo.Master, time.Since(startTime))
+		if err := repoTemplate.Execute(w, repo); err != nil {
+			log.Printf("failed to render repo/show %s with laters commit from %q (%s)", repo.FullName, repo.Master, err)
+		} else {
+			log.Printf("rendered repo/show %s with latest commit from %q [%s]", repo.FullName, repo.Master, time.Since(startTime))
+		}
 	case git.ErrorNotFound:
 		http.Error(w, fmt.Sprintf("No such repository %q", repoName), http.StatusNotFound)
 	default:
