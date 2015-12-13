@@ -106,6 +106,7 @@ func repositoryFromGithub(githubRepo *api.Repository) *Repository {
 		Description: *githubRepo.Description,
 		Master:      *githubRepo.MasterBranch,
 		HTMLURL:     *githubRepo.HTMLURL,
+		GitURL:      *githubRepo.GitURL,
 	}
 }
 

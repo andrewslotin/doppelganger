@@ -5,6 +5,7 @@ type Repository struct {
 	Description string
 	Master      string
 	HTMLURL     string
+	GitURL      string
 
 	LatestMasterCommit *Commit
 }
