@@ -15,9 +15,17 @@
     <h2>Create new repository mirror</h2>
     <p>
       <form method="POST">
-        <p>{{ .FullName }} will be mirrored to <code>{{ .GitURL }}</code>.</p>
-        <input type="hidden" name="repo" value="{{ .FullName }}"/>
-        <button type="submit">Proceed</button>
+        <div>
+          <label for="repo">Repository:</label>
+          <input id="repo" name="repo" type="text" value="{{ .FullName }}" readonly="true"/>
+        </div>
+        <div>
+          <label for="repo">Mirror URL:</label>
+          <input id="url" name="url" type="text" value="{{ .GitURL }}" readonly="true"/>
+        </div>
+        <div>
+          <button type="submit">Proceed</button>
+        </div>
       </form>
     </p>
   </body>
