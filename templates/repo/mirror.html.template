@@ -20,10 +20,6 @@
           <input id="repo" name="repo" type="text" value="{{ .FullName }}" readonly="true"/>
         </div>
         <div>
-          <label for="repo">Mirror URL:</label>
-          <input id="url" name="url" type="text" value="{{ .GitURL }}" readonly="true"/>
-        </div>
-        <div>
           <button type="submit">Proceed</button>
         </div>
       </form>

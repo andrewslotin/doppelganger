@@ -38,7 +38,6 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		case git.ErrorNotMirrored: // Mirror repository not found, offer to create a new one
 			repo = &git.Repository{
 				FullName: repoName,
-				GitURL:   fmt.Sprintf("git@doppelganger.local:%s.git", repoName),
 			}
 
 			if err := handler.NewMirror(w, repo); err != nil {
