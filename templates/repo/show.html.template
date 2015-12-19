@@ -15,7 +15,7 @@
           <li><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
         {{ else }}
           <li><a href="{{ .HTMLURL }}">View on GitHub</a></li>
-          <li><a href="/mirror?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
+          <li><a href="/mirrored?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
         {{ end }}
       </ul>
     </div>

@@ -14,7 +14,7 @@
 
     <h2>Create new repository mirror</h2>
     <p>
-      <form method="POST">
+      <form action="/mirror" method="POST">
         <div>
           <label for="repo">Repository:</label>
           <input id="repo" name="repo" type="text" value="{{ .FullName }}" readonly="true"/>

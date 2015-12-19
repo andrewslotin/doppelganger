@@ -33,7 +33,7 @@ func main() {
 	http.Handle("/", NewReposHandler(repositoryService))
 
 	mirroredRepositoryService := git.NewMirroredRepositories(*mirrorDir)
-	http.Handle("/mirror", NewReposHandler(mirroredRepositoryService))
+	http.Handle("/mirrored", NewReposHandler(mirroredRepositoryService))
 
 	*addr = fmt.Sprintf("%s:%d", *addr, *port)
 	log.Printf("doppelganger is listening on %s", *addr)
