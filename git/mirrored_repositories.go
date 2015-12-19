@@ -53,18 +53,33 @@ func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
 }
 
 func (service *MirroredRepositories) checkDirIsRepository(path string) bool {
-	gitDirName := filepath.Join(service.mirrorPath, path, ".git")
-
-	fileInfo, err := os.Stat(gitDirName)
-	if err != nil {
+	fullPath := filepath.Join(service.mirrorPath, path)
+	if fileInfo, err := os.Stat(fullPath); err != nil {
 		if os.IsNotExist(err) {
 			return false
 		}
 
-		log.Printf("failed to stat dir %s (%s)", gitDirName, err)
+		log.Printf("[WARN] failed to stat %s (%s)", fullPath, err)
+		return false
+	} else if !fileInfo.IsDir() {
+		return false
 	}
 
-	return fileInfo.IsDir()
+	output, err := service.execGitCommand(path, "rev-parse", "--is-inside-git-dir")
+	if err != nil {
+		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned error %s for %s (%s)", err, path, string(output))
+		return false
+	}
+
+	switch string(output) {
+	case "true":
+		return true
+	case "false":
+		return false
+	default:
+		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned unexpected output for %s: %q", path, string(output))
+		return false
+	}
 }
 
 func (service *MirroredRepositories) repositoryFromDir(path string) *Repository {
