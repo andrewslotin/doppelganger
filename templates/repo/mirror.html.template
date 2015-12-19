@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ .FullName }}</title>
+  </head>
+  <body>
+    <h1>{{ .FullName }}</h1>
+
+    <div>
+      <ul>
+        <li><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
+      </ul>
+    </div>
+
+    <h2>Create new repository mirror</h2>
+    <p>
+      <form method="POST">
+        <p>{{ .FullName }} will be mirrored to <code>{{ .GitURL }}</code>.</p>
+        <input type="hidden" name="repo" value="{{ .FullName }}"/>
+        <button type="submit">Proceed</button>
+      </form>
+    </p>
+  </body>
+</html>
