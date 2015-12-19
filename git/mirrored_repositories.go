@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -50,6 +51,10 @@ func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
 	repo.LatestMasterCommit = service.commitFromDir(fullName)
 
 	return repo, nil
+}
+
+func (service *MirroredRepositories) Create(fullName, gitURL string) error {
+	return service.cloneMirror(gitURL, fullName)
 }
 
 func (service *MirroredRepositories) checkDirIsRepository(path string) bool {
@@ -157,6 +162,24 @@ func (service *MirroredRepositories) currentBranch(path string) string {
 	}
 
 	return string(bytes.TrimPrefix(refName, []byte("refs/heads/")))
+}
+
+func (service *MirroredRepositories) cloneMirror(gitURL, path string) error {
+	path, projectName := filepath.Dir(path), filepath.Base(path)
+	fullPath := filepath.Join(service.mirrorPath, path)
+
+	if err := os.MkdirAll(fullPath, 0755); err != nil {
+		log.Printf("failed to create %s (%s)", fullPath, err)
+		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
+	}
+
+	output, err := service.execGitCommand(path, "clone", "--mirror", gitURL, projectName)
+	if err != nil {
+		log.Printf("git clone --mirror %s to %s returned %s (%s)", gitURL, path, err, string(output))
+		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
+	}
+
+	return nil
 }
 
 func (service *MirroredRepositories) execGitCommand(path string, args ...string) ([]byte, error) {
