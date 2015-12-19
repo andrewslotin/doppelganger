@@ -2,6 +2,7 @@ package git
 
 import (
 	"bytes"
+	"errors"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,7 +14,11 @@ import (
 
 const DefaultMaster = "master"
 
-var gitCmd string
+var (
+	gitCmd string
+
+	ErrorNotMirrored = errors.New("mirror not found")
+)
 
 type MirroredRepositories struct {
 	mirrorPath string
@@ -38,7 +43,7 @@ func (service *MirroredRepositories) All() ([]*Repository, error) {
 
 func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
 	if !service.checkDirIsRepository(fullName) {
-		return nil, ErrorNotFound
+		return nil, ErrorNotMirrored
 	}
 
 	repo := service.repositoryFromDir(fullName)

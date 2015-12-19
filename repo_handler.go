@@ -45,7 +45,7 @@ func (handler *RepoHandler) Show(w http.ResponseWriter, repoName string) {
 		} else {
 			log.Printf("rendered repo/show %s with latest commit from %q [%s]", repo.FullName, repo.Master, time.Since(startTime))
 		}
-	case git.ErrorNotFound:
+	case git.ErrorNotFound, git.ErrorNotMirrored:
 		http.Error(w, fmt.Sprintf("No such repository %q", repoName), http.StatusNotFound)
 	default:
 		log.Printf("failed to fetch %s (%s)", repoName, err)
