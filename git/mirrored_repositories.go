@@ -57,6 +57,10 @@ func (service *MirroredRepositories) Create(fullName, gitURL string) error {
 	return service.cloneMirror(gitURL, fullName)
 }
 
+func (service *MirroredRepositories) Update(fullName string) error {
+	return service.updateRemote(fullName)
+}
+
 func (service *MirroredRepositories) checkDirIsRepository(path string) bool {
 	fullPath := filepath.Join(service.mirrorPath, path)
 	if fileInfo, err := os.Stat(fullPath); err != nil {
@@ -177,6 +181,16 @@ func (service *MirroredRepositories) cloneMirror(gitURL, path string) error {
 	if err != nil {
 		log.Printf("git clone --mirror %s to %s returned %s (%s)", gitURL, path, err, string(output))
 		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
+	}
+
+	return nil
+}
+
+func (service *MirroredRepositories) updateRemote(path string) error {
+	output, err := service.execGitCommand(path, "remote", "update")
+	if err != nil {
+		log.Printf("[WARN] git remote update returned error %s for %s (%s)", err, path, string(output))
+		return errors.New("update failed")
 	}
 
 	return nil
