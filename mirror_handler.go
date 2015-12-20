@@ -31,12 +31,19 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		return
 	}
 
-	if err := handler.CreateMirror(w, repoName); err != nil {
-		http.Error(w, "Internal server error", http.StatusInternalServerError)
+	switch action := strings.ToLower(req.FormValue("action")); action {
+	case "create":
+		if err := handler.CreateMirror(w, repoName); err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+
+		log.Printf("mirrored %s [%s]", repoName, time.Since(startTime))
+	default:
+		http.Error(w, fmt.Sprintf("Unsupported action %q", action), http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("mirrored %s [%s]", repoName, time.Since(startTime))
 	http.Redirect(w, req, fmt.Sprintf("/mirrored?repo=%s", url.QueryEscape(repoName)), http.StatusSeeOther)
 }
 
