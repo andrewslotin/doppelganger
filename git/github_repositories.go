@@ -9,7 +9,11 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var ErrorNotFound = errors.New("not found")
+var (
+	githubHookName = "doppelganger-copy-on-push"
+
+	ErrorNotFound = errors.New("not found")
+)
 
 type GithubRepositories struct {
 	client *api.Client
@@ -92,6 +96,27 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 	repo.LatestMasterCommit = commitFromGithub(lastCommit)
 
 	return repo, nil
+}
+
+func (service *GithubRepositories) Track(fullName, callbackURL string) error {
+	owner, name := ParseRepositoryName(fullName)
+	return service.registerPushWebhook(owner, name, callbackURL)
+}
+
+func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string) error {
+	_, response, err := service.client.Repositories.CreateHook(owner, repo, &api.Hook{
+		Name:   &githubHookName,
+		Events: []string{"push"},
+		Config: map[string]interface{}{
+			"url":          cbURL,
+			"content_type": "json",
+		},
+	})
+	if err == nil {
+		err = api.CheckResponse(response.Response)
+	}
+
+	return err
 }
 
 // ParseRepositoryName returns owner and project name for given GitHub repository.
