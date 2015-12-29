@@ -12,11 +12,11 @@ import (
 )
 
 type MirrorHandler struct {
-	githubRepos   *git.GithubRepositories
-	mirroredRepos *git.MirroredRepositories
+	githubRepos   git.RepositoryService
+	mirroredRepos git.MirrorService
 }
 
-func NewMirrorHandler(githubRepos *git.GithubRepositories, mirroredRepos *git.MirroredRepositories) *MirrorHandler {
+func NewMirrorHandler(githubRepos git.RepositoryService, mirroredRepos git.MirrorService) *MirrorHandler {
 	return &MirrorHandler{
 		githubRepos:   githubRepos,
 		mirroredRepos: mirroredRepos,
@@ -68,7 +68,7 @@ func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName strin
 }
 
 func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName string) error {
-	switch repo, err := handler.githubRepos.Get(repoName); err {
+	switch repo, err := handler.mirroredRepos.Get(repoName); err {
 	case nil:
 		return handler.mirroredRepos.Update(repo.FullName)
 	case git.ErrorNotMirrored:
