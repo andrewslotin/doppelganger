@@ -12,14 +12,16 @@ import (
 )
 
 type MirrorHandler struct {
-	githubRepos   git.RepositoryService
-	mirroredRepos git.MirrorService
+	githubRepos      git.RepositoryService
+	mirroredRepos    git.MirrorService
+	trackRepoService git.TrackingService
 }
 
-func NewMirrorHandler(githubRepos git.RepositoryService, mirroredRepos git.MirrorService) *MirrorHandler {
+func NewMirrorHandler(githubRepos git.RepositoryService, mirroredRepos git.MirrorService, trackingService git.TrackingService) *MirrorHandler {
 	return &MirrorHandler{
-		githubRepos:   githubRepos,
-		mirroredRepos: mirroredRepos,
+		githubRepos:      githubRepos,
+		mirroredRepos:    mirroredRepos,
+		trackRepoService: trackingService,
 	}
 }
 
@@ -66,6 +68,18 @@ func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName strin
 	}
 }
 
+func (handler *MirrorHandler) SetupChangeTracking(w http.ResponseWriter, req *http.Request, repoName string) error {
+	switch repo, err := handler.mirroredRepos.Get(repoName); err {
+	case nil:
+		return handler.trackRepoService.Track(repo.FullName, apiHookURL(req).String())
+	case git.ErrorNotMirrored:
+		http.Error(w, "Repository not mirrored", http.StatusNotFound)
+		return nil
+	default:
+		return err
+	}
+}
+
 func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName string) error {
 	switch repo, err := handler.mirroredRepos.Get(repoName); err {
 	case nil:
@@ -80,4 +94,12 @@ func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName strin
 
 func (handler *MirrorHandler) redirectToRepository(w http.ResponseWriter, req *http.Request, repoName string) {
 	http.Redirect(w, req, fmt.Sprintf("/mirrored?repo=%s", url.QueryEscape(repoName)), http.StatusSeeOther)
+}
+
+func apiHookURL(req *http.Request) *url.URL {
+	return &url.URL{
+		Scheme: req.URL.Scheme,
+		Host:   req.URL.Host,
+		Path:   "/apihook",
+	}
 }
