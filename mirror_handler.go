@@ -37,6 +37,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 	switch action := strings.ToLower(req.FormValue("action")); action {
 	case "create":
 		if err := handler.CreateMirror(w, repoName); err != nil {
+			log.Printf("failed to create mirror %s: %s", repoName, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -45,6 +46,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		handler.redirectToRepository(w, req, repoName)
 	case "update":
 		if err := handler.UpdateMirror(w, repoName); err != nil {
+			log.Printf("failed to update mirror %s: %s", repoName, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
@@ -58,6 +60,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		}
 
 		if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
+			log.Printf("failed to track changes for mirror %s: %s", repoName, err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
