@@ -87,7 +87,7 @@ func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName strin
 func (handler *MirrorHandler) SetupChangeTracking(w http.ResponseWriter, req *http.Request, repoName string) error {
 	switch repo, err := handler.mirroredRepos.Get(repoName); err {
 	case nil:
-		return handler.trackRepoService.Track(repo.FullName, apiHookURL(req).String())
+		return handler.trackRepoService.Track(repo.FullName, apiHookURL(req.Host, req.TLS != nil).String())
 	case git.ErrorNotMirrored:
 		http.Error(w, "Repository not mirrored", http.StatusNotFound)
 		return nil
@@ -112,10 +112,15 @@ func (handler *MirrorHandler) redirectToRepository(w http.ResponseWriter, req *h
 	http.Redirect(w, req, fmt.Sprintf("/mirrored?repo=%s", url.QueryEscape(repoName)), http.StatusSeeOther)
 }
 
-func apiHookURL(req *http.Request) *url.URL {
+func apiHookURL(host string, isSSL bool) *url.URL {
+	scheme := "http"
+	if isSSL {
+		scheme = "https"
+	}
+
 	return &url.URL{
-		Scheme: req.URL.Scheme,
-		Host:   req.URL.Host,
+		Scheme: scheme,
+		Host:   host,
 		Path:   "/apihook",
 	}
 }
