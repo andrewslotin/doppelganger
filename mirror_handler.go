@@ -40,6 +40,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		}
 
 		log.Printf("mirrored %s [%s]", repoName, time.Since(startTime))
+		handler.redirectToRepository(w, req, repoName)
 	case "update":
 		if err := handler.UpdateMirror(w, repoName); err != nil {
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -47,12 +48,10 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		}
 
 		log.Printf("updated mirror %s [%s]", repoName, time.Since(startTime))
+		handler.redirectToRepository(w, req, repoName)
 	default:
 		http.Error(w, fmt.Sprintf("Unsupported action %q", action), http.StatusBadRequest)
-		return
 	}
-
-	http.Redirect(w, req, fmt.Sprintf("/mirrored?repo=%s", url.QueryEscape(repoName)), http.StatusSeeOther)
 }
 
 func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName string) error {
@@ -77,4 +76,8 @@ func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName strin
 	default:
 		return err
 	}
+}
+
+func (handler *MirrorHandler) redirectToRepository(w http.ResponseWriter, req *http.Request, repoName string) {
+	http.Redirect(w, req, fmt.Sprintf("/mirrored?repo=%s", url.QueryEscape(repoName)), http.StatusSeeOther)
 }
