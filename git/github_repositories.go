@@ -9,11 +9,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-var (
-	githubHookName = "web"
-
-	ErrorNotFound = errors.New("not found")
-)
+var ErrorNotFound = errors.New("not found")
 
 type GithubRepositories struct {
 	client *api.Client
@@ -104,14 +100,19 @@ func (service *GithubRepositories) Track(fullName, callbackURL string) error {
 }
 
 func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string) error {
-	_, response, err := service.client.Repositories.CreateHook(owner, repo, &api.Hook{
-		Name:   &githubHookName,
+	hook := &api.Hook{
+		Name:   new(string),
+		Active: new(bool),
 		Events: []string{"push"},
 		Config: map[string]interface{}{
 			"url":          cbURL,
 			"content_type": "json",
 		},
-	})
+	}
+	*hook.Name = "web"
+	*hook.Active = true
+
+	_, response, err := service.client.Repositories.CreateHook(owner, repo, hook)
 	if err == nil {
 		err = api.CheckResponse(response.Response)
 	}
