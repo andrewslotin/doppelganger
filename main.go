@@ -39,5 +39,7 @@ func main() {
 
 	*addr = fmt.Sprintf("%s:%d", *addr, *port)
 	log.Printf("doppelganger is listening on %s", *addr)
-	http.ListenAndServe(*addr, nil)
+	if err := http.ListenAndServe(*addr, nil); err != nil {
+		log.Panic(err)
+	}
 }
