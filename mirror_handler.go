@@ -51,6 +51,19 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 		log.Printf("updated mirror %s [%s]", repoName, time.Since(startTime))
 		handler.redirectToRepository(w, req, repoName)
+	case "track":
+		if handler.trackRepoService == nil {
+			http.Error(w, "Tracking changes not supported", http.StatusNotImplemented)
+			return
+		}
+
+		if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
+			http.Error(w, "Internal service error", http.StatusInternalServerError)
+			return
+		}
+
+		log.Printf("set up push changes hook for %s [%s]", repoName, time.Since(startTime))
+		handler.redirectToRepository(w, req, repoName)
 	default:
 		http.Error(w, fmt.Sprintf("Unsupported action %q", action), http.StatusBadRequest)
 	}
