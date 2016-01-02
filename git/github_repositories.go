@@ -50,7 +50,7 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 			paginatedRepos[i] = &Repository{
 				FullName:    *githubRepo.FullName,
 				Description: *githubRepo.Description,
-				Master:      *githubRepo.MasterBranch,
+				Master:      *githubRepo.DefaultBranch,
 				HTMLURL:     *githubRepo.HTMLURL,
 			}
 		}
@@ -82,7 +82,7 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 		return nil, err
 	}
 
-	masterBranch, _, err := service.client.Repositories.GetBranch(repoOwner, repoName, *githubRepo.MasterBranch)
+	masterBranch, _, err := service.client.Repositories.GetBranch(repoOwner, repoName, *githubRepo.DefaultBranch)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func repositoryFromGithub(githubRepo *api.Repository) *Repository {
 	return &Repository{
 		FullName:    *githubRepo.FullName,
 		Description: *githubRepo.Description,
-		Master:      *githubRepo.MasterBranch,
+		Master:      *githubRepo.DefaultBranch,
 		HTMLURL:     *githubRepo.HTMLURL,
 		GitURL:      *githubRepo.GitURL,
 	}
