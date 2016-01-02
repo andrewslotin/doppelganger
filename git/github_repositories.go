@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	githubHookName = "doppelganger-copy-on-push"
+	githubHookName = "web"
 
 	ErrorNotFound = errors.New("not found")
 )
