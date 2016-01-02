@@ -58,7 +58,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		}
 
 		if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
-			http.Error(w, "Internal service error", http.StatusInternalServerError)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
 		}
 
