@@ -46,7 +46,7 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 			paginatedRepos[i] = &Repository{
 				FullName:    *githubRepo.FullName,
 				Description: *githubRepo.Description,
-				Master:      *githubRepo.MasterBranch,
+				Master:      *githubRepo.DefaultBranch,
 				HTMLURL:     *githubRepo.HTMLURL,
 			}
 		}
@@ -78,7 +78,7 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 		return nil, err
 	}
 
-	masterBranch, _, err := service.client.Repositories.GetBranch(repoOwner, repoName, *githubRepo.MasterBranch)
+	masterBranch, _, err := service.client.Repositories.GetBranch(repoOwner, repoName, *githubRepo.DefaultBranch)
 	if err != nil {
 		return nil, err
 	}
@@ -94,6 +94,32 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 	return repo, nil
 }
 
+func (service *GithubRepositories) Track(fullName, callbackURL string) error {
+	owner, name := ParseRepositoryName(fullName)
+	return service.registerPushWebhook(owner, name, callbackURL)
+}
+
+func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string) error {
+	hook := &api.Hook{
+		Name:   new(string),
+		Active: new(bool),
+		Events: []string{"push"},
+		Config: map[string]interface{}{
+			"url":          cbURL,
+			"content_type": "json",
+		},
+	}
+	*hook.Name = "web"
+	*hook.Active = true
+
+	_, response, err := service.client.Repositories.CreateHook(owner, repo, hook)
+	if err == nil {
+		err = api.CheckResponse(response.Response)
+	}
+
+	return err
+}
+
 // ParseRepositoryName returns owner and project name for given GitHub repository.
 func ParseRepositoryName(fullName string) (string, string) {
 	fields := strings.SplitN(fullName, "/", 2)
@@ -104,7 +130,7 @@ func repositoryFromGithub(githubRepo *api.Repository) *Repository {
 	return &Repository{
 		FullName:    *githubRepo.FullName,
 		Description: *githubRepo.Description,
-		Master:      *githubRepo.MasterBranch,
+		Master:      *githubRepo.DefaultBranch,
 		HTMLURL:     *githubRepo.HTMLURL,
 		GitURL:      *githubRepo.GitURL,
 	}
