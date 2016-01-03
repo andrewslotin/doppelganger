@@ -43,7 +43,16 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		}
 
 		log.Printf("mirrored %s [%s]", repoName, time.Since(startTime))
-		handler.redirectToRepository(w, req, repoName)
+		if req.FormValue("notrack") != "" {
+			handler.redirectToRepository(w, req, repoName)
+			return
+		}
+
+		// Redirect to /mirror?action=track&repo=<repoName> to set up webhook
+		q := req.Form
+		q.Set("action", "track")
+		req.URL.RawQuery = q.Encode()
+		http.Redirect(w, req, req.URL.String(), http.StatusSeeOther)
 	case "update":
 		if err := handler.UpdateMirror(w, repoName); err != nil {
 			log.Printf("failed to update mirror %s: %s", repoName, err)
