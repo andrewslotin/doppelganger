@@ -1,36 +1,97 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ .FullName }}</title>
+    <link rel="stylesheet" href="/assets/css/normalize.css">
+    <link rel="stylesheet" href="/assets/css/bootstrap.css">
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
   </head>
   <body>
-    <h1>{{ .FullName }}</h1>
-    {{ if .Description }}
-      <div><em>{{ .Description }}</em></div>
-    {{ end }}
+    <script type="text/javascript" src="/assets/js/jquery.js"></script>
+    <script type="text/javascript" src="/assets/js/bootstrap.js"></script>
 
-    <div>
-      <ul>
-        {{ if .Mirrored }}
-          <li><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
-        {{ else }}
-          <li><a href="{{ .HTMLURL }}">View on GitHub</a></li>
-          <li><a href="/mirrored?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
-        {{ end }}
-      </ul>
-    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+          <div class="page-header">
+            <h1>{{ .FullName }}</h1>
 
-    <h2>Latest master update</h2>
-    <blockquote>{{ .LatestMasterCommit.Message }}</blockquote>
-    <em>{{ .LatestMasterCommit.Author }} on {{ .LatestMasterCommit.Date.Format "2006-01-02 15:04 MST" }}</em>
-    <p>Commit SHA: <code>{{ .LatestMasterCommit.SHA }}</code></p>
-    
-    {{ if .Mirrored }}
-      <form action="/mirror" method="POST">
-        <input name="repo" type="hidden" value="{{ .FullName }}"/>
-        <input name="action" type="hidden" value="update"/>
-        <button type="submit">Sync</button>
-      </form>
-    {{ end }}
+            {{ if .Description }}
+            <div><em>{{ .Description }}</em></div>
+            {{ end }}
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+          <ul class="nav nav-pills">
+            {{ if .Mirrored }}
+            <li role="presentation"><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
+            <li role="presentation" class="active"><a href="/mirrored?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
+            {{ else }}
+            <li role="presentation" class="active"><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
+            <li role="presentation"><a href="/mirrored?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
+            <li role="presentation"><a href="{{ .HTMLURL }}">View on GitHub</a></li>
+            {{ end }}
+          </ul>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+          <h3 class="text-capitalize">Latest master update</h3>
+          
+          <blockquote>
+            <p>{{ .LatestMasterCommit.Message }}</p>
+            <footer>{{ .LatestMasterCommit.Author }} on {{ .LatestMasterCommit.Date.Format "2006-01-02 15:04 MST" }}</footer>
+          </blockquote>
+          <p>Commit SHA: <samp>{{ .LatestMasterCommit.SHA }}</samp></p>
+        </div>
+      </div>
+
+      {{ if .Mirrored }}
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+          <h3 class="text-capitalize">What's next?</h3>
+          
+          <ul class="list-unstyled">
+            <li>
+              Set up a new local copy to use mirror:
+              <pre>git clone git@<mirror-host>:<mirror-dir>/{{ .FullName }}.git</pre>
+            </li>
+            <li>
+              Add mirror as a new remote to already existing repository and use set it as upstream for local <samp>master<samp>:
+              <pre>git remote add mirror git@<mirror-host>:<mirror-fir>/{{ .FullName }}.git
+git branch --unset-upstream master
+git branch --set-upstream master mirror/master</pre>
+          </ul>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+          <h3 class="text-capitalize">Sychronize your mirror</h3>
+          
+          <p>If you experience difficulties with automatic mirror syncing via webhook, you may trigger manual update by clicking the button below.</p>
+          
+          <form action="/mirror" method="POST">
+            <input name="repo" type="hidden" value="{{ .FullName }}"/>
+            <input name="action" type="hidden" value="update"/>
+            <button type="submit" class="btn btn-primary">
+              <span class="glyphicon glyphicon-refresh"></span>
+              Syncronize mirror
+            </button>
+          </form>
+        </div>
+      </div>
+      {{ end }}
+    </div>    
   </body>
 </html>
