@@ -36,6 +36,7 @@ func main() {
 	http.Handle("/mirrored", NewReposHandler(mirroredRepositoryService))
 	http.Handle("/mirror", NewMirrorHandler(repositoryService, mirroredRepositoryService, repositoryService))
 	http.Handle("/apihook", NewWebhookHandler(mirroredRepositoryService))
+	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 
 	*addr = fmt.Sprintf("%s:%d", *addr, *port)
 	log.Printf("doppelganger is listening on %s", *addr)
