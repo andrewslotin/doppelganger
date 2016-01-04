@@ -24,12 +24,14 @@
             <h1>Repositories</h1>
           </div>
 
-          <dl class="repositories-list">
+          <div class="list-group">
             {{ range . }}
-              <dt><a href="?repo={{ .FullName | urlquery }}">{{ .FullName }}</a></dt>
-              {{ if .Description }}<dd><small>{{ .Description }}</small></dd>{{ end }}
+              <a href="?repo={{ .FullName | urlquery }}" class="list-group-item">
+                <h4>{{ .FullName }}</h4>
+                {{ if .Description }}<p class="list-group-item-text">{{ .Description }}</p>{{ end }}
+              </a>
             {{ else }}
-              No repositories found.
+              <div class="well">No repositories found.</div>
             {{ end }}
           </dl>
         </div>
