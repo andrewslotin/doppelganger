@@ -27,6 +27,8 @@ func (handler *WebhookHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 	defer req.Body.Close()
 
 	switch event := req.Header.Get("X-Github-Event"); event {
+	case "ping":
+		fmt.Fprint(w, "PONG")
 	case "push":
 		switch repo, err := handler.UpdateRepo(req); err {
 		case nil:
