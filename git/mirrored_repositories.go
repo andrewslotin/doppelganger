@@ -99,7 +99,7 @@ func (service *MirroredRepositories) repositoryFromDir(path string) *Repository 
 }
 
 func (service *MirroredRepositories) commitFromDir(path string) *Commit {
-	output, err := service.execGitCommand(path, "log", "-n", "1", "--pretty=%H\n%cn\n%cD\n%s")
+	output, err := service.execGitCommand(path, "log", "-n", "1", "--pretty=%H\n%cn\n%cd\n%s", "--date=format:%FT%T%z")
 	if err != nil {
 		log.Printf("[WARN] git log returned error %s for %s (%s)", err, path, string(output))
 		return nil
@@ -117,7 +117,7 @@ func (service *MirroredRepositories) commitFromDir(path string) *Commit {
 		Message: lines[3],
 	}
 
-	commitDate, err := time.Parse(time.RFC1123Z, lines[2])
+	commitDate, err := time.Parse("2006-01-02T15:04:05Z0700", lines[2])
 	if err != nil {
 		log.Printf("[WARN] unexpected date format from git log for %s (%s)", path, lines[2])
 	} else {
