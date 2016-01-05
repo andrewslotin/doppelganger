@@ -9,6 +9,12 @@ body {
     height: 3em;
 }
 
-.repositories-list > dt:nth-child(n+1) {
+#repositories-list .list-group-item {
     margin-top: 0.5em;
+    border: none;
+    padding: 10px 15px;
+}
+
+#repositories-list .list-group-item h4 {
+    margin-top: 0;
 }
