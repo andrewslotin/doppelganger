@@ -65,11 +65,11 @@
           
           <p>
             Set up a new local copy to use mirror:
-            <pre>git clone git@<mirror-host>:<mirror-dir>/{{ .FullName }}.git</pre>
+            <pre>git clone git@&lt;mirror-host&gt;:&lt;mirror-dir&gt;/{{ .FullName }}.git</pre>
           </p>
           <p>
             Add mirror as a new remote to an already existing repository and use set it as upstream for local <samp>master<samp>:
-            <pre>git remote add mirror git@<mirror-host>:<mirror-fir>/{{ .FullName }}.git
+            <pre>git remote add mirror git@&lt;mirror-host&gt;:&lt;mirror-dir&gt;/{{ .FullName }}.git
 git branch --unset-upstream master
 git branch --set-upstream master mirror/master</pre>
           </p>
