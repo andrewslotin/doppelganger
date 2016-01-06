@@ -69,7 +69,7 @@ func (handler *WebhookHandler) UpdateRepo(req *http.Request) (repo *git.Reposito
 		return nil, err
 	}
 
-	updatedBranch := strings.TrimPrefix(updateEvent.Ref, "ref/heads/")
+	updatedBranch := strings.TrimPrefix(updateEvent.Ref, "refs/heads/")
 	if repo.Master != updatedBranch {
 		log.Printf("skip push event to %s (mirrored ref %s, received %s)", repo.FullName, repo.Master, updatedBranch)
 		return repo, nil
