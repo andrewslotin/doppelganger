@@ -1,4 +1,4 @@
-VERSION = 1.0.0
+VERSION = 1.0.1
 LDFLAGS = -X main.VERSION=$(VERSION) -X main.BUILD_DATE=$(shell date +%F)
 
 build: 
