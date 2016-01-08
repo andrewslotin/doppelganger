@@ -2,6 +2,7 @@ package git
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -43,11 +44,31 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 		}
 
 		for i, githubRepo := range githubRepos {
+			if githubRepo.FullName == nil {
+				log.Printf("[WARN] excluding GitHub repository without full_name %v", githubRepo)
+				continue
+			}
+
+			if githubRepo.GitURL == nil {
+				log.Printf("[WARN] excluding GitHub repository without git_url %v", githubRepo)
+				continue
+			}
+
 			paginatedRepos[i] = &Repository{
-				FullName:    *githubRepo.FullName,
-				Description: *githubRepo.Description,
-				Master:      *githubRepo.DefaultBranch,
-				HTMLURL:     *githubRepo.HTMLURL,
+				FullName: *githubRepo.FullName,
+				Master:   "master",
+			}
+
+			if githubRepo.Description != nil {
+				paginatedRepos[i].Description = *githubRepo.Description
+			}
+
+			if githubRepo.DefaultBranch != nil {
+				paginatedRepos[i].Master = *githubRepo.DefaultBranch
+			}
+
+			if githubRepo.HTMLURL != nil {
+				paginatedRepos[i].HTMLURL = *githubRepo.HTMLURL
 			}
 		}
 
