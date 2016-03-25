@@ -1,5 +1,4 @@
-Doppelganger
-============
+# ![Doppelganger](../master/media/logo.png?raw=true)
 
 A tool to create and maintain mirrors of GitHub repositories. Once the repostiory is mirrored a 
 webhook is set up, so next time you push to GitHub `master` mirror will be updated. You may also trigger an update 
