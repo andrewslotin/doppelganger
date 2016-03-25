@@ -43,6 +43,10 @@ func main() {
 	repositoryService := git.NewGithubRepositories(token)
 	mirroredRepositoryService := git.NewMirroredRepositories(*mirrorDir)
 
+	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./assets/favicon.ico")
+	})
+
 	http.Handle("/", NewReposHandler(repositoryService))
 	http.Handle("/mirrored", NewReposHandler(mirroredRepositoryService))
 	http.Handle("/mirror", NewMirrorHandler(repositoryService, mirroredRepositoryService, repositoryService))
