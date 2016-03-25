@@ -11,8 +11,8 @@ import (
 )
 
 var (
-	repoTemplate      = template.Must(template.ParseFiles("templates/repo/show.html.template"))
-	newMirrorTemplate = template.Must(template.ParseFiles("templates/repo/mirror.html.template"))
+	repoTemplate      = template.Must(template.ParseFiles("templates/layout.html.template", "templates/repo/show.html.template"))
+	newMirrorTemplate = template.Must(template.ParseFiles("templates/layout.html.template", "templates/repo/mirror.html.template"))
 )
 
 type RepoHandler struct {

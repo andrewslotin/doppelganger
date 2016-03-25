@@ -1,72 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ .FullName }}</title>
-    <link rel="stylesheet" href="/assets/css/normalize.css">
-    <link rel="stylesheet" href="/assets/css/bootstrap.css">
-    <link rel="stylesheet" href="/assets/css/styles.css">
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <script type="text/javascript" src="/assets/js/jquery.js"></script>
-    <script type="text/javascript" src="/assets/js/bootstrap.js"></script>
+{{ define "title" }}Doppelganger | Mirror {{ .FullName }}{{ end }}
 
-    <div class="container">
-      <div class="row">
-        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
-          <div class="page-header">
-            <h1>{{ .FullName }}</h1>
-          </div>
-        </div>
-      </div>
-      
-      <div class="row">
-        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
-          <ul class="nav nav-pills">
-            <li role="presentation"><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
-            <li role="presentation" class="active"><a href="/mirrored?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
-            <li role="presentation"><a href="/">Back to GitHub repositories list</a></li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="row">
-        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
-          <h3 class="text-capitalize">Create new repository mirror</h3>
-
-          <p>
-            GitHub repository <samp>{{ .FullName }}</samp> was not mirrored yet. After you click "Proceed" a bare copy will be created within the mirror directory.
-          </p>
-          <p>
-            You can always synchronize your mirrored copy by clicking "Sync" button at <a href="/mirrored?repo{{ .FullName | urlquery }}">mirrored copy page</a>. Besides that a GitHub webhook will be created and every time you push to the default branch (usually <samp>master</samp>) the copy will be updated as well. You might want to configure your reverse proxy to restrict access to <code>/apihook</code> from GitHub IPs only.
-          </p>
-          <div class="alert alert-info" role="alert">
-            <strong>Note:</strong> any changes pushed to the mirror repository will be discarded next time the source repository is updated.
-          </div>
-        </div>
-      </div>
-      
-      <div class="row">
-        <div class="col-md-6 col-md-offset-2 col-sm-12 col-sm-offset-0">
-          <form action="/mirror" method="POST">
-            <input name="action" type="hidden" value="create"/>
-            <label for="repo">Repository:</label>
-            <div class="input-group">
-              <span class="input-group-addon">https://github.com/</span>
-              <input id="repo" name="repo" type="text" class="form-control" value="{{ .FullName }}" readonly="true">
-              <div class="input-group-btn">
-                <button type="submit" class="btn btn-default">Proceed</button>
-              </div>
-            </div>
-          </form>
-        </div>
+{{ define "content" }}
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <div class="page-header">
+        <h1>{{ .FullName }}</h1>
       </div>
     </div>
-  </body>
-</html>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <ul class="nav nav-pills">
+        <li role="presentation"><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
+        <li role="presentation" class="active"><a href="/mirrored?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
+        <li role="presentation"><a href="/">Back to GitHub repositories list</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <h3 class="text-capitalize">Create new repository mirror</h3>
+
+      <p>
+        GitHub repository <samp>{{ .FullName }}</samp> was not mirrored yet. After you click "Proceed" a bare copy will be created within the mirror directory.
+      </p>
+      <p>
+        You can always synchronize your mirrored copy by clicking "Sync" button at <a href="/mirrored?repo{{ .FullName | urlquery }}">mirrored copy page</a>. Besides that a GitHub webhook will be created and every time you push to the default branch (usually <samp>master</samp>) the copy will be updated as well. You might want to configure your reverse proxy to restrict access to <code>/apihook</code> from GitHub IPs only.
+      </p>
+      <div class="alert alert-info" role="alert">
+        <strong>Note:</strong> any changes pushed to the mirror repository will be discarded next time the source repository is updated.
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-6 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <form action="/mirror" method="POST">
+        <input name="action" type="hidden" value="create"/>
+        <label for="repo">Repository:</label>
+        <div class="input-group">
+          <span class="input-group-addon">https://github.com/</span>
+          <input id="repo" name="repo" type="text" class="form-control" value="{{ .FullName }}" readonly="true">
+          <div class="input-group-btn">
+            <button type="submit" class="btn btn-default">Proceed</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+{{ end }}
