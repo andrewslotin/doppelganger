@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	reposTemplate = template.Must(template.ParseFiles("templates/repos/index.html.template"))
+	reposTemplate = template.Must(template.ParseFiles("templates/layout.html.template", "templates/repos/index.html.template"))
 )
 
 type ReposHandler struct {

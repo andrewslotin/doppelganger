@@ -1,44 +1,23 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Doppelganger</title>
-    <link rel="stylesheet" href="/assets/css/normalize.css">
-    <link rel="stylesheet" href="/assets/css/bootstrap.css">
-    <link rel="stylesheet" href="/assets/css/styles.css">
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <script type="text/javascript" src="/assets/js/jquery.js"></script>
-    <script type="text/javascript" src="/assets/js/bootstrap.js"></script>
-    
-    <div class="container">
-      <div class="row">
-        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
-          <div class="page-header">
-            <h1>Repositories</h1>
-          </div>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
-          <div id="repositories-list" class="list-group">
-            {{ range . }}
-              <a href="?repo={{ .FullName | urlquery }}" class="list-group-item">
-                <h4>{{ .FullName }}</h4>
-                {{ if .Description }}<p class="list-group-item-text">{{ .Description }}</p>{{ end }}
-              </a>
-            {{ else }}
-              <div class="well">No repositories found.</div>
-            {{ end }}
-          </dl>
-        </div>
+{{ define "content" }}
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <div class="page-header">
+        <h1>Repositories</h1>
       </div>
     </div>
-  </body>
-</html>
+  </div>
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <div id="repositories-list" class="list-group">
+        {{ range . }}
+          <a href="?repo={{ .FullName | urlquery }}" class="list-group-item">
+            <h4>{{ .FullName }}</h4>
+            {{ if .Description }}<p class="list-group-item-text">{{ .Description }}</p>{{ end }}
+          </a>
+        {{ else }}
+          <div class="well">No repositories found.</div>
+        {{ end }}
+      </dl>
+    </div>
+  </div>
+{{ end }}
