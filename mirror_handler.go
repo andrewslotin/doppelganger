@@ -70,7 +70,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 		if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
 			log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			http.Error(w, "Failed to set up push web hook, please check logs for details", http.StatusInternalServerError)
 			return
 		}
 

@@ -87,10 +87,6 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 	repoOwner, repoName := ParseRepositoryName(fullName)
 
 	githubRepo, response, err := service.client.Repositories.Get(repoOwner, repoName)
-	if err == nil {
-		err = api.CheckResponse(response.Response)
-	}
-
 	if err != nil {
 		if response.StatusCode == http.StatusNotFound {
 			return nil, ErrorNotFound
@@ -133,12 +129,58 @@ func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string
 	*hook.Name = "web"
 	*hook.Active = true
 
-	_, response, err := service.client.Repositories.CreateHook(owner, repo, hook)
-	if err == nil {
-		err = api.CheckResponse(response.Response)
+	_, _, err := service.client.Repositories.CreateHook(owner, repo, hook)
+	if err != nil {
+		errorResponse, ok := err.(*api.ErrorResponse)
+		if !ok || errorResponse.Message != "Validation Failed" {
+			return err
+		}
+
+		if len(errorResponse.Errors) != 1 || errorResponse.Errors[0].Code != "custom" {
+			return err
+		}
+
+		if service.checkPushWebhookExists(owner, repo, cbURL) {
+			log.Printf("push webhook to %s for %s/%s has already been set up", cbURL, owner, repo)
+			return nil
+		}
 	}
 
 	return err
+}
+
+func (service *GithubRepositories) checkPushWebhookExists(owner, repo, cbURL string) bool {
+	opts := &api.ListOptions{
+		PerPage: 50,
+	}
+
+	for {
+		hooks, response, err := service.client.Repositories.ListHooks(owner, repo, opts)
+		if err != nil {
+			log.Printf("[WARN] failed to get %s/%s webhooks: %s", owner, repo, err)
+			return false
+		}
+
+		for _, hook := range hooks {
+			if hook.Config["url"] != cbURL || len(hook.Events) == 0 {
+				continue
+			}
+
+			for _, event := range hook.Events {
+				if event == "push" {
+					return true
+				}
+			}
+		}
+
+		if response.NextPage == 0 {
+			break
+		}
+
+		opts.Page = response.NextPage
+	}
+
+	return false
 }
 
 // ParseRepositoryName returns owner and project name for given GitHub repository.
