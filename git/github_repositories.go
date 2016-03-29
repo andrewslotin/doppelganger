@@ -134,6 +134,40 @@ func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string
 	return err
 }
 
+func (service *GithubRepositories) checkPushWebhookExists(owner, repo, cbURL string) bool {
+	opts := &api.ListOptions{
+		PerPage: 50,
+	}
+
+	for {
+		hooks, response, err := service.client.Repositories.ListHooks(owner, repo, opts)
+		if err != nil {
+			log.Printf("[WARN] failed to get %s/%s webhooks: %s", owner, repo, err)
+			return false
+		}
+
+		for _, hook := range hooks {
+			if hook.Config["url"] != cbURL || len(hook.Events) == 0 {
+				continue
+			}
+
+			for _, event := range hook.Events {
+				if event == "push" {
+					return true
+				}
+			}
+		}
+
+		if response.NextPage == 0 {
+			break
+		}
+
+		opts.Page = response.NextPage
+	}
+
+	return false
+}
+
 // ParseRepositoryName returns owner and project name for given GitHub repository.
 func ParseRepositoryName(fullName string) (string, string) {
 	fields := strings.SplitN(fullName, "/", 2)
