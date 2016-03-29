@@ -130,6 +130,21 @@ func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string
 	*hook.Active = true
 
 	_, _, err := service.client.Repositories.CreateHook(owner, repo, hook)
+	if err != nil {
+		errorResponse, ok := err.(*api.ErrorResponse)
+		if !ok || errorResponse.Message != "Validation Failed" {
+			return err
+		}
+
+		if len(errorResponse.Errors) != 1 || errorResponse.Errors[0].Code != "custom" {
+			return err
+		}
+
+		if service.checkPushWebhookExists(owner, repo, cbURL) {
+			log.Printf("push webhook to %s for %s/%s has already been set up", cbURL, owner, repo)
+			return nil
+		}
+	}
 
 	return err
 }
