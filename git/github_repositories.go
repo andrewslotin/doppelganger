@@ -87,10 +87,6 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 	repoOwner, repoName := ParseRepositoryName(fullName)
 
 	githubRepo, response, err := service.client.Repositories.Get(repoOwner, repoName)
-	if err == nil {
-		err = api.CheckResponse(response.Response)
-	}
-
 	if err != nil {
 		if response.StatusCode == http.StatusNotFound {
 			return nil, ErrorNotFound
@@ -133,10 +129,7 @@ func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string
 	*hook.Name = "web"
 	*hook.Active = true
 
-	_, response, err := service.client.Repositories.CreateHook(owner, repo, hook)
-	if err == nil {
-		err = api.CheckResponse(response.Response)
-	}
+	_, _, err := service.client.Repositories.CreateHook(owner, repo, hook)
 
 	return err
 }
