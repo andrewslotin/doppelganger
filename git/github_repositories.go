@@ -10,12 +10,16 @@ import (
 	"golang.org/x/oauth2"
 )
 
+// ErrorNotFound is returned by Get method if specified repository cannot be found.
 var ErrorNotFound = errors.New("not found")
 
+// GithubRepositories is a type intended to list and lookup GitHub repositories as well as setting webhooks.
 type GithubRepositories struct {
 	client *api.Client
 }
 
+// NewGithubRepositories creates and initializes a new instance of GithubRepositories. Provided token is
+// used to authorize requests to GitHub API and must be given "repo" or "public_repo" permissions.
 func NewGithubRepositories(token string) *GithubRepositories {
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: token,
@@ -27,6 +31,7 @@ func NewGithubRepositories(token string) *GithubRepositories {
 	}
 }
 
+// All returns a list of GitHub repositories accessible with provided API token.
 func (service *GithubRepositories) All() ([]*Repository, error) {
 	opts := &api.RepositoryListOptions{
 		ListOptions: api.ListOptions{
@@ -83,6 +88,7 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 	return allRepos, nil
 }
 
+// Get retireves GitHub repositories details and returns an instance of Repository containing last commit information.
 func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 	repoOwner, repoName := ParseRepositoryName(fullName)
 
@@ -111,6 +117,7 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 	return repo, nil
 }
 
+// Track sets up "push" event GitHub webhook to be sent to callbackURL.
 func (service *GithubRepositories) Track(fullName, callbackURL string) error {
 	owner, name := ParseRepositoryName(fullName)
 	return service.registerPushWebhook(owner, name, callbackURL)

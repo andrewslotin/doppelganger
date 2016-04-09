@@ -1,5 +1,5 @@
 VERSION = 1.0.2
-LDFLAGS = -X main.VERSION=$(VERSION) -X main.BUILD_DATE=$(shell date +%F)
+LDFLAGS = -X main.Version=$(VERSION) -X main.BuildDate=$(shell date +%F)
 
 build: 
 	@echo "Building v$(VERSION)"

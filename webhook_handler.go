@@ -12,10 +12,15 @@ import (
 	"github.com/andrewslotin/doppelganger/git"
 )
 
+// WebhookHandler is a type that implements http.Handler interface and is used by HTTP server to handle GitHub webhooks sent to "/apihook".
+// Currently "ping" and "push" events are supported.
+//
+// For more details on webhooks see https://developer.github.com/webhooks/.
 type WebhookHandler struct {
 	mirroredRepos git.MirrorService
 }
 
+// NewWebhookHandler creates and initializes an instance of WebhookHandler.
 func NewWebhookHandler(mirroredRepos git.MirrorService) *WebhookHandler {
 	return &WebhookHandler{
 		mirroredRepos: mirroredRepos,
@@ -44,6 +49,7 @@ func (handler *WebhookHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 	}
 }
 
+// UpdateRepo handles "push" event and updates existing GitHub repository mirrors synchronizing it with remote.
 func (handler *WebhookHandler) UpdateRepo(req *http.Request) (repo *git.Repository, err error) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {

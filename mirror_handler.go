@@ -11,12 +11,23 @@ import (
 	"github.com/andrewslotin/doppelganger/git"
 )
 
+// MirrorHandler is a type that implements http.Handler interface and is used to handle requests to "/mirror".
+// An action that needs to be executed is defined by "action" form variable. Target repository is specified by its name passed in
+// request parameter "name".
+//
+//   // Create a new mirror of andrewslotin/doppelganger
+//   curl http://doppelganger/mirror?action=create&name=andrewslotin/doppelganger
+//   // Update an existing mirror of andrewslotin/doppelganger
+//   curl http://doppelganger/mirror?action=update&name=andrewslotin/doppelganger
+//   // Set up tracking of changes in andrewslotin/doppelganger
+//   curl http://doppelganger/mirror?action=track&name=andrewslotin/doppelganger
 type MirrorHandler struct {
 	githubRepos      git.RepositoryService
 	mirroredRepos    git.MirrorService
 	trackRepoService git.TrackingService
 }
 
+// NewMirrorHandler creates and initializes a new handler.
 func NewMirrorHandler(githubRepos git.RepositoryService, mirroredRepos git.MirrorService, trackingService git.TrackingService) *MirrorHandler {
 	return &MirrorHandler{
 		githubRepos:      githubRepos,
@@ -81,6 +92,8 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 	}
 }
 
+// CreateMirror searches for a repository in githubRepos and creates its mirror.
+// If there is no such repository an HTTP 404 response will be sent.
 func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName string) error {
 	switch repo, err := handler.githubRepos.Get(repoName); err {
 	case nil:
@@ -93,6 +106,8 @@ func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName strin
 	}
 }
 
+// SetupChangeTracking searches for a repository in githubRepos and sets up changes tracker using trackingService.Track().
+// If there is no such repository an HTTP 404 response will be sent.
 func (handler *MirrorHandler) SetupChangeTracking(w http.ResponseWriter, req *http.Request, repoName string) error {
 	switch repo, err := handler.mirroredRepos.Get(repoName); err {
 	case nil:
@@ -105,6 +120,8 @@ func (handler *MirrorHandler) SetupChangeTracking(w http.ResponseWriter, req *ht
 	}
 }
 
+// UpdateMirror updates an existing mirror synchronizing its with source.
+// If there is no such repository an HTTP 404 response will be sent.
 func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName string) error {
 	switch repo, err := handler.mirroredRepos.Get(repoName); err {
 	case nil:

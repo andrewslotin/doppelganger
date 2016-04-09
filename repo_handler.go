@@ -15,11 +15,15 @@ var (
 	newMirrorTemplate = template.Must(template.ParseFiles("templates/layout.html.template", "templates/repo/mirror.html.template"))
 )
 
+// RepoHandler is a type that implements http.Handler interface and is used by ReposHandler to handle single repository
+// requests containing "name" parameter. The value of this parameter is used to lookup the repository and render it using Show method.
+// If repository is not found a new mirror page is rendered instead using NewMirror.
 type RepoHandler struct {
 	repositories git.RepositoryService
 }
 
-func NewRepoClient(repositoryService git.RepositoryService) *RepoHandler {
+// NewRepoHandler creates and initializes a new handler.
+func NewRepoHandler(repositoryService git.RepositoryService) *RepoHandler {
 	return &RepoHandler{
 		repositories: repositoryService,
 	}
@@ -64,10 +68,12 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	}
 }
 
+// Show renders a repository page using templates/repo/show.html.template
 func (handler *RepoHandler) Show(w http.ResponseWriter, repo *git.Repository) error {
 	return repoTemplate.Execute(w, repo)
 }
 
+// NewMirror renders a new repository mirror page using templates/repo/mirror.html.template
 func (handler *RepoHandler) NewMirror(w http.ResponseWriter, repo *git.Repository) error {
 	return newMirrorTemplate.Execute(w, repo)
 }
