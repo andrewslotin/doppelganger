@@ -33,7 +33,7 @@ func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)
 
 	repos, err := handler.repositories.All()
 	if err != nil {
-		log.Printf("failed to get repos (%s) %s", err, req)
+		log.Printf("failed to get repos (%s) %v", err, req)
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
