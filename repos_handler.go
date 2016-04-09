@@ -13,10 +13,13 @@ var (
 	reposTemplate = template.Must(template.ParseFiles("templates/layout.html.template", "templates/repos/index.html.template"))
 )
 
+// ReposHandler is a type that implements http.Handler interface and is used to render repository lists.
+// Doppelganger uses ReposHandler to display both GitHub and local repositories.
 type ReposHandler struct {
 	repositories git.RepositoryService
 }
 
+// NewReposHandler creates and initializes a new handler.
 func NewReposHandler(repositoryService git.RepositoryService) *ReposHandler {
 	return &ReposHandler{
 		repositories: repositoryService,

@@ -11,6 +11,7 @@ import (
 	"github.com/andrewslotin/doppelganger/git"
 )
 
+// Version and BuildDate are used in help message and set by Makefile
 const (
 	Version   = "n/a"
 	BuildDate = "n/a"
