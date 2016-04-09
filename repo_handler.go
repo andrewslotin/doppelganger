@@ -19,7 +19,7 @@ type RepoHandler struct {
 	repositories git.RepositoryService
 }
 
-func NewRepoClient(repositoryService git.RepositoryService) *RepoHandler {
+func NewRepoHandler(repositoryService git.RepositoryService) *RepoHandler {
 	return &RepoHandler{
 		repositories: repositoryService,
 	}

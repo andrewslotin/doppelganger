@@ -27,7 +27,7 @@ func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)
 	startTime := time.Now()
 
 	if repoName := req.FormValue("repo"); repoName != "" {
-		NewRepoClient(handler.repositories).ServeHTTP(w, req)
+		NewRepoHandler(handler.repositories).ServeHTTP(w, req)
 		return
 	}
 
