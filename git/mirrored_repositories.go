@@ -13,14 +13,18 @@ import (
 	"time"
 )
 
+// DefaultMaster is a default name for master branch.
 const DefaultMaster = "master"
 
 var (
 	gitCmd string
 
+	// ErrorNotMirrored is an error returned by Get if given repository does not exist.
 	ErrorNotMirrored = errors.New("mirror not found")
 )
 
+// MirroredRepositories is a type that is intended for maintaining local Git repository mirrors
+// located under the mirrorPath directory.
 type MirroredRepositories struct {
 	mirrorPath string
 }
@@ -32,16 +36,22 @@ func init() {
 	}
 }
 
+// NewMirroredRepositories creates and initializes an instance of MirroredRepositories reading and creating
+// repositories under path directory.
 func NewMirroredRepositories(path string) *MirroredRepositories {
 	return &MirroredRepositories{
 		mirrorPath: path,
 	}
 }
 
+// All recursively searches and returns a list of repositories under mirrorPath. Unlike Get, All returns
+// only basic information about Git repository, such as its name and the name of master branch.
 func (service *MirroredRepositories) All() ([]*Repository, error) {
 	return service.findGitRepos("")
 }
 
+// Get searches for a git repository in <mirrorPath>/<fullName> and returns the name of its name, master branch
+// and lastest commit. If specified directory does not exist or not a git repository ErrorNotMirrored is returned.
 func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
 	if !service.checkDirIsRepository(fullName) {
 		return nil, ErrorNotMirrored
@@ -53,10 +63,13 @@ func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
 	return repo, nil
 }
 
+// Create creates a local mirror of remote repository from gitURL by calling "git --mirror <gitURL> <fullName>".
 func (service *MirroredRepositories) Create(fullName, gitURL string) error {
 	return service.cloneMirror(gitURL, fullName)
 }
 
+// Update downloads latest changes from remote repository into a local mirror discarding any changes that were pushed
+// to mirror only. Update calls "git remote update" in <mirrorPath>/<fullName>.
 func (service *MirroredRepositories) Update(fullName string) error {
 	return service.updateRemote(fullName)
 }
