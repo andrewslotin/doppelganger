@@ -12,12 +12,14 @@ import (
 )
 
 type tokenContextKey struct{}
+type clientContextKey struct{}
 
 var (
 	// ErrorNotFound is returned by Get method if specified repository cannot be found.
 	ErrorNotFound = errors.New("not found")
 	// GithubToken is a context.Context key for Github auth token.
 	GithubToken tokenContextKey
+	httpClient  clientContextKey
 )
 
 // GithubRepositories is a type intended to list and lookup GitHub repositories as well as setting webhooks.
@@ -34,6 +36,12 @@ func NewGithubRepositories(ctx context.Context) (*GithubRepositories, error) {
 	token, ok := ctx.Value(GithubToken).(string)
 	if !ok || token == "" {
 		return nil, errors.New("missing auth token")
+	}
+
+	if c, ok := ctx.Value(httpClient).(*api.Client); ok {
+		return &GithubRepositories{
+			client: c,
+		}, nil
 	}
 
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
