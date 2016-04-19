@@ -7,28 +7,43 @@ import (
 	"strings"
 
 	api "github.com/google/go-github/github"
+	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
 )
 
-// ErrorNotFound is returned by Get method if specified repository cannot be found.
-var ErrorNotFound = errors.New("not found")
+type tokenContextKey struct{}
+
+var (
+	// ErrorNotFound is returned by Get method if specified repository cannot be found.
+	ErrorNotFound = errors.New("not found")
+	// GithubToken is a context.Context key for Github auth token.
+	GithubToken tokenContextKey
+)
 
 // GithubRepositories is a type intended to list and lookup GitHub repositories as well as setting webhooks.
 type GithubRepositories struct {
 	client *api.Client
 }
 
-// NewGithubRepositories creates and initializes a new instance of GithubRepositories. Provided token is
-// used to authorize requests to GitHub API and must be given "repo" or "public_repo" permissions.
-func NewGithubRepositories(token string) *GithubRepositories {
+// NewGithubRepositories creates and initializes a new instance of GithubRepositories.
+// Context is expected to have GitHub auth token set with git.GithubToken as a key.
+// Provided token is used to authorize requests to GitHub API and must be given "repo"
+// or "public_repo" permissions.
+// If token is not set or is empty an error will be returned.
+func NewGithubRepositories(ctx context.Context) (*GithubRepositories, error) {
+	token, ok := ctx.Value(GithubToken).(string)
+	if !ok || token == "" {
+		return nil, errors.New("missing auth token")
+	}
+
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: token,
 	})
-	oauthClient := oauth2.NewClient(oauth2.NoContext, tokenSource)
+	oauthClient := oauth2.NewClient(ctx, tokenSource)
 
 	return &GithubRepositories{
 		client: api.NewClient(oauthClient),
-	}
+	}, nil
 }
 
 // All returns a list of GitHub repositories accessible with provided API token.

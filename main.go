@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"golang.org/x/net/context"
+
 	"github.com/andrewslotin/doppelganger/git"
 )
 
@@ -43,7 +45,10 @@ func main() {
 		os.Exit(-1)
 	}
 
-	repositoryService := git.NewGithubRepositories(token)
+	repositoryService, err := git.NewGithubRepositories(context.WithValue(context.Background(), git.GithubToken, token))
+	if err != nil {
+		log.Panic(err)
+	}
 	mirroredRepositoryService := git.NewMirroredRepositories(*mirrorDir)
 
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
