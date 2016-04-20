@@ -193,6 +193,56 @@ func TestGithubRepositoriesAll_HandlePagination(t *testing.T) {
 	assert.Len(t, repos, 2)
 }
 
+func TestGithubRepositoriesGet_RepositoryExists(t *testing.T) {
+	ctx, mux, teardown := setup()
+	defer teardown()
+
+	// Get repo
+	mux.HandleFunc("/repos/user1/repo1", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{
+		    "full_name": "user1/repo1",
+		    "description":
+		    "Test repo",
+		    "default_branch":"production",
+		    "git_url":"git:git@github.com:user1/repo1.git",
+		    "html_url": "https://github.com/user1/repo1"
+		}`)
+	})
+	// Get branch
+	mux.HandleFunc("/repos/user1/repo1/branches/production", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"name":"production","commit":{"sha":"abc123"}}`)
+	})
+	// Get git commit
+	mux.HandleFunc("/repos/user1/repo1/git/commits/abc123", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{
+		    "author":{"name":"Jon Doe","date":"2011-04-14T16:00:49Z"},
+		    "committer":{"name":"Doppel Ganger","date":"2016-04-14T16:00:00Z"},
+		    "message":"Commit message",
+		    "sha":"abc123"
+		}`)
+	})
+
+	githubRepos, err := NewGithubRepositories(ctx)
+	require.NoError(t, err)
+
+	repo, err := githubRepos.Get("user1/repo1")
+	require.NoError(t, err)
+
+	assert.Equal(t, repo.FullName, "user1/repo1")
+	assert.Equal(t, repo.GitURL, "git:git@github.com:user1/repo1.git")
+}
+
+func TestGithubRepositoriesGet_NotFound(t *testing.T) {
+	ctx, _, teardown := setup()
+	defer teardown()
+
+	githubRepos, err := NewGithubRepositories(ctx)
+	require.NoError(t, err)
+
+	_, err = githubRepos.Get("user1/repo1")
+	assert.Equal(t, err, ErrorNotFound)
+}
+
 func setup() (ctx context.Context, mux *http.ServeMux, teardownFn func()) {
 	mux = http.NewServeMux()
 	server := httptest.NewServer(mux)
