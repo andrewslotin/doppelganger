@@ -14,6 +14,12 @@ import (
 	"golang.org/x/net/context"
 )
 
+func TestParseRepositoryName(t *testing.T) {
+	owner, repo := ParseRepositoryName("test/me")
+	assert.Equal(t, owner, "test")
+	assert.Equal(t, repo, "me")
+}
+
 func TestNewGithubRepositories_WithToken(t *testing.T) {
 	ctx := context.WithValue(context.Background(), GithubToken, "secret_token")
 
