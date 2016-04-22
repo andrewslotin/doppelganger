@@ -1,7 +1,9 @@
 package git
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -241,6 +243,34 @@ func TestGithubRepositoriesGet_NotFound(t *testing.T) {
 
 	_, err = githubRepos.Get("user1/repo1")
 	assert.Equal(t, err, ErrorNotFound)
+}
+
+func TestGithubRepositoriesTrack(t *testing.T) {
+	ctx, mux, teardown := setup()
+	defer teardown()
+
+	mux.HandleFunc("/repos/user1/repo1/hooks", func(w http.ResponseWriter, r *http.Request) {
+		require.Equal(t, r.Method, "POST")
+
+		body, err := ioutil.ReadAll(r.Body)
+		require.NoError(t, err)
+
+		var hook github.Hook
+		require.NoError(t, json.Unmarshal(body, &hook), string(body))
+
+		assert.Equal(t, *hook.Name, "web")
+		assert.Contains(t, hook.Events, "push")
+		assert.Equal(t, hook.Config["url"], "http://example.com/cb")
+		assert.True(t, *hook.Active)
+
+		fmt.Fprint(w, `{"id":1}`)
+	})
+
+	githubRepos, err := NewGithubRepositories(ctx)
+	require.NoError(t, err)
+
+	err = githubRepos.Track("user1/repo1", "http://example.com/cb")
+	require.NoError(t, err)
 }
 
 func setup() (ctx context.Context, mux *http.ServeMux, teardownFn func()) {
