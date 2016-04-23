@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/andrewslotin/doppelganger/git/internal"
 	"github.com/google/go-github/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -283,7 +284,7 @@ func setup() (ctx context.Context, mux *http.ServeMux, teardownFn func()) {
 
 	ctx = context.Background()
 	ctx = context.WithValue(ctx, GithubToken, "secret_token")
-	ctx = context.WithValue(ctx, httpClient, client)
+	ctx = context.WithValue(ctx, internal.HttpClient, client)
 
 	return ctx, mux, server.Close
 }

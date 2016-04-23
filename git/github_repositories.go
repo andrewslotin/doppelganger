@@ -9,17 +9,15 @@ import (
 	api "github.com/google/go-github/github"
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
-)
 
-type tokenContextKey struct{}
-type clientContextKey struct{}
+	"github.com/andrewslotin/doppelganger/git/internal"
+)
 
 var (
 	// ErrorNotFound is returned by Get method if specified repository cannot be found.
 	ErrorNotFound = errors.New("not found")
 	// GithubToken is a context.Context key for Github auth token.
-	GithubToken tokenContextKey
-	httpClient  clientContextKey
+	GithubToken internal.TokenContextKey
 )
 
 // GithubRepositories is a type intended to list and lookup GitHub repositories as well as setting webhooks.
@@ -38,7 +36,7 @@ func NewGithubRepositories(ctx context.Context) (*GithubRepositories, error) {
 		return nil, errors.New("missing auth token")
 	}
 
-	if c, ok := ctx.Value(httpClient).(*api.Client); ok {
+	if c, ok := ctx.Value(internal.HttpClient).(*api.Client); ok {
 		return &GithubRepositories{
 			client: c,
 		}, nil
