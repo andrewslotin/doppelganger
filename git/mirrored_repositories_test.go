@@ -84,3 +84,37 @@ func TestMirroredRepositoriesAll(t *testing.T) {
 		}
 	}
 }
+
+func TestMirroredRepositoriesGet_MirrorExists(t *testing.T) {
+	cmd := &commandMock{}
+	cmd.On("IsRepository", "mirrors/a/b").Return(true)
+	cmd.On("CurrentBranch", "mirrors/a/b").Return("production")
+	cmd.On("LastCommit", "mirrors/a/b").Return("abc123", "Jon Doe", "HI MOM", "2016-04-23 16:12:39", nil)
+
+	mirroredRepos := NewMirroredRepositories("mirrors", cmd)
+	repo, err := mirroredRepos.Get("a/b")
+	require.NoError(t, err)
+
+	if cmd.AssertExpectations(t) {
+		assert.Equal(t, "a/b", repo.FullName)
+		assert.Equal(t, "production", repo.Master)
+
+		if commit := repo.LatestMasterCommit; assert.NotNil(t, commit) {
+			assert.Equal(t, "abc123", commit.SHA)
+			assert.Equal(t, "Jon Doe", commit.Author)
+			assert.Equal(t, "HI MOM", commit.Message)
+			assert.Equal(t, time.Date(2016, 4, 23, 16, 12, 39, 0, time.UTC), commit.Date)
+		}
+	}
+}
+
+func TestMirroredRepositoriesGet_NotMirrored(t *testing.T) {
+	cmd := &commandMock{}
+	cmd.On("IsRepository", "mirrors/a/b").Return(false)
+
+	mirroredRepos := NewMirroredRepositories("mirrors", cmd)
+	_, err := mirroredRepos.Get("a/b")
+
+	cmd.AssertExpectations(t)
+	assert.Equal(t, err, ErrorNotMirrored)
+}
