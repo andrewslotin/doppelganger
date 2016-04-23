@@ -1,23 +1,17 @@
 package git
 
 import (
-	"bytes"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"os"
-	"os/exec"
 	"path/filepath"
-	"strings"
-	"time"
 )
 
 // DefaultMaster is a default name for master branch.
 const DefaultMaster = "master"
 
 var (
-	gitCmd string
+	gitCmd Command
 
 	// ErrorNotMirrored is an error returned by Get if given repository does not exist.
 	ErrorNotMirrored = errors.New("mirror not found")
@@ -31,8 +25,8 @@ type MirroredRepositories struct {
 
 func init() {
 	var err error
-	if gitCmd, err = exec.LookPath("git"); err != nil {
-		log.Fatal("git is not found in PATH")
+	if gitCmd, err = SystemGit(); err != nil {
+		log.Fatal(err)
 	}
 }
 
@@ -53,7 +47,7 @@ func (service *MirroredRepositories) All() ([]*Repository, error) {
 // Get searches for a git repository in <mirrorPath>/<fullName> and returns the name of its name, master branch
 // and lastest commit. If specified directory does not exist or not a git repository ErrorNotMirrored is returned.
 func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
-	if !service.checkDirIsRepository(fullName) {
+	if !service.cmd.IsRepository(service.resolveMirrorPath(fullName)) {
 		return nil, ErrorNotMirrored
 	}
 
@@ -65,83 +59,17 @@ func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
 
 // Create creates a local mirror of remote repository from gitURL by calling "git --mirror <gitURL> <fullName>".
 func (service *MirroredRepositories) Create(fullName, gitURL string) error {
-	return service.cloneMirror(gitURL, fullName)
+	return service.cmd.CloneMirror(gitURL, service.resolveMirrorPath(fullName))
 }
 
 // Update downloads latest changes from remote repository into a local mirror discarding any changes that were pushed
 // to mirror only. Update calls "git remote update" in <mirrorPath>/<fullName>.
 func (service *MirroredRepositories) Update(fullName string) error {
-	return service.updateRemote(fullName)
-}
-
-func (service *MirroredRepositories) checkDirIsRepository(path string) bool {
-	fullPath := filepath.Join(service.mirrorPath, path)
-	if fileInfo, err := os.Stat(fullPath); err != nil {
-		if os.IsNotExist(err) {
-			return false
-		}
-
-		log.Printf("[WARN] failed to stat %s (%s)", fullPath, err)
-		return false
-	} else if !fileInfo.IsDir() {
-		return false
-	}
-
-	output, err := service.execGitCommand(path, "rev-parse", "--is-inside-git-dir")
-	if err != nil {
-		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned error %s for %s (%s)", err, path, string(output))
-		return false
-	}
-
-	switch string(output) {
-	case "true":
-		return true
-	case "false":
-		return false
-	default:
-		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned unexpected output for %s: %q", path, string(output))
-		return false
-	}
-}
-
-func (service *MirroredRepositories) repositoryFromDir(path string) *Repository {
-	return &Repository{
-		FullName: path,
-		Master:   service.currentBranch(path),
-	}
-}
-
-func (service *MirroredRepositories) commitFromDir(path string) *Commit {
-	output, err := service.execGitCommand(path, "log", "-n", "1", "--pretty=%H\n%cn\n%cd\n%s", "--date=format:%FT%T%z")
-	if err != nil {
-		log.Printf("[WARN] git log returned error %s for %s (%s)", err, path, string(output))
-		return nil
-	}
-
-	lines := strings.SplitN(string(output), "\n", 4)
-	if len(lines) < 4 {
-		log.Printf("[WARN] unexpected output from git log for %s (%s)", path, string(output))
-		return nil
-	}
-
-	commit := &Commit{
-		SHA:     lines[0],
-		Author:  lines[1],
-		Message: lines[3],
-	}
-
-	commitDate, err := time.Parse("2006-01-02T15:04:05Z0700", lines[2])
-	if err != nil {
-		log.Printf("[WARN] unexpected date format from git log for %s (%s)", path, lines[2])
-	} else {
-		commit.Date = commitDate
-	}
-
-	return commit
+	return service.cmd.UpdateRemote(service.resolveMirrorPath(fullName))
 }
 
 func (service *MirroredRepositories) findGitRepos(path string) ([]*Repository, error) {
-	if service.checkDirIsRepository(path) {
+	if service.cmd.IsRepository(service.resolveMirrorPath(path)) {
 		return []*Repository{service.repositoryFromDir(path)}, nil
 	}
 
@@ -166,55 +94,27 @@ func (service *MirroredRepositories) findGitRepos(path string) ([]*Repository, e
 	return repos, nil
 }
 
-func (service *MirroredRepositories) currentBranch(path string) string {
-	refName, err := service.execGitCommand(path, "symbolic-ref", "HEAD")
-	if err != nil {
-		log.Printf("[WARN] git symbolic-ref HEAD returned error %s for %s (%s)", err, path, string(refName))
-		return DefaultMaster
+func (service *MirroredRepositories) repositoryFromDir(path string) *Repository {
+	return &Repository{
+		FullName: path,
+		Master:   service.cmd.CurrentBranch(service.resolveMirrorPath(path)),
 	}
-
-	if !bytes.HasPrefix(refName, []byte("refs/heads/")) {
-		log.Printf("[WARN] unexpected reference name for %s (%q)", path, refName)
-		return DefaultMaster
-	}
-
-	return string(bytes.TrimPrefix(refName, []byte("refs/heads/")))
 }
 
-func (service *MirroredRepositories) cloneMirror(gitURL, path string) error {
-	path, projectName := filepath.Dir(path), filepath.Base(path)
-	fullPath := filepath.Join(service.mirrorPath, path)
-
-	if err := os.MkdirAll(fullPath, 0755); err != nil {
-		log.Printf("failed to create %s (%s)", fullPath, err)
-		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
-	}
-
-	output, err := service.execGitCommand(path, "clone", "--mirror", gitURL, projectName)
+func (service *MirroredRepositories) commitFromDir(path string) *Commit {
+	rev, author, message, createdAt, err := service.cmd.LastCommit(service.resolveMirrorPath(path))
 	if err != nil {
-		log.Printf("git clone --mirror %s to %s returned %s (%s)", gitURL, path, err, string(output))
-		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
+		return nil
 	}
 
-	return nil
+	return &Commit{
+		SHA:     rev,
+		Author:  author,
+		Message: message,
+		Date:    createdAt,
+	}
 }
 
-func (service *MirroredRepositories) updateRemote(path string) error {
-	output, err := service.execGitCommand(path, "remote", "update")
-	if err != nil {
-		log.Printf("[WARN] git remote update returned error %s for %s (%s)", err, path, string(output))
-		return errors.New("update failed")
-	}
-
-	return nil
-}
-
-func (service *MirroredRepositories) execGitCommand(path string, args ...string) ([]byte, error) {
-	cmd := exec.Command(gitCmd, args...)
-	cmd.Dir = filepath.Join(service.mirrorPath, path)
-
-	output, err := cmd.CombinedOutput()
-	output = bytes.TrimSpace(output)
-
-	return output, err
+func (service *MirroredRepositories) resolveMirrorPath(path string) string {
+	return filepath.Join(service.mirrorPath, path)
 }
