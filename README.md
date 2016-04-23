@@ -4,6 +4,8 @@ A tool to create and maintain mirrors of GitHub repositories. Once the repostior
 webhook is set up, so next time you push to GitHub `master` mirror will be updated. You may also trigger an update 
 manually by clicking "Synchronize repository".
 
+[![Build Status](https://travis-ci.org/andrewslotin/doppelganger.png)](https://travis-ci.org/andrewslotin/doppelganger)
+
 Why Would I Need It?
 --------------------
 
