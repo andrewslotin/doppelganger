@@ -128,3 +128,13 @@ func TestMirroredRepositoriesCreate(t *testing.T) {
 
 	cmd.AssertExpectations(t)
 }
+
+func TestMirroredRepositoriesUpdate(t *testing.T) {
+	cmd := &commandMock{}
+	cmd.On("UpdateRemote", "mirrors/a/b").Return(nil)
+
+	mirroredRepos := NewMirroredRepositories("mirrors", cmd)
+	require.NoError(t, mirroredRepos.Update("a/b"))
+
+	cmd.AssertExpectations(t)
+}
