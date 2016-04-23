@@ -64,14 +64,14 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 
 	var allRepos []*Repository
 
-	paginatedRepos := make([]*Repository, opts.ListOptions.PerPage)
+	paginatedRepos := make([]*Repository, 0, opts.ListOptions.PerPage)
 	for {
 		githubRepos, response, err := service.client.Repositories.List("", opts)
 		if err != nil {
 			return nil, err
 		}
 
-		for i, githubRepo := range githubRepos {
+		for _, githubRepo := range githubRepos {
 			if githubRepo.FullName == nil {
 				log.Printf("[WARN] excluding GitHub repository without full_name %v", githubRepo)
 				continue
@@ -82,29 +82,32 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 				continue
 			}
 
-			paginatedRepos[i] = &Repository{
+			repo := &Repository{
 				FullName: *githubRepo.FullName,
 				Master:   "master",
 			}
 
 			if githubRepo.Description != nil {
-				paginatedRepos[i].Description = *githubRepo.Description
+				repo.Description = *githubRepo.Description
 			}
 
 			if githubRepo.DefaultBranch != nil {
-				paginatedRepos[i].Master = *githubRepo.DefaultBranch
+				repo.Master = *githubRepo.DefaultBranch
 			}
 
 			if githubRepo.HTMLURL != nil {
-				paginatedRepos[i].HTMLURL = *githubRepo.HTMLURL
+				repo.HTMLURL = *githubRepo.HTMLURL
 			}
+
+			paginatedRepos = append(paginatedRepos, repo)
 		}
 
-		allRepos = append(allRepos, paginatedRepos[0:len(githubRepos)]...)
+		allRepos = append(allRepos, paginatedRepos[0:len(paginatedRepos)]...)
+		githubRepos = githubRepos[:0]
+
 		if response.NextPage == 0 {
 			break
 		}
-
 		opts.ListOptions.Page = response.NextPage
 	}
 
