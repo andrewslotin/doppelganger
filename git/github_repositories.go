@@ -103,7 +103,7 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 		}
 
 		allRepos = append(allRepos, paginatedRepos[0:len(paginatedRepos)]...)
-		githubRepos = githubRepos[:0]
+		paginatedRepos = paginatedRepos[:0]
 
 		if response.NextPage == 0 {
 			break
