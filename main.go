@@ -47,9 +47,14 @@ func main() {
 
 	repositoryService, err := git.NewGithubRepositories(context.WithValue(context.Background(), git.GithubToken, token))
 	if err != nil {
-		log.Panic(err)
+		log.Fatal(err)
 	}
-	mirroredRepositoryService := git.NewMirroredRepositories(*mirrorDir)
+
+	gitCmd, err := git.SystemGit()
+	if err != nil {
+		log.Fatal(err)
+	}
+	mirroredRepositoryService := git.NewMirroredRepositories(*mirrorDir, gitCmd)
 
 	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./assets/favicon.ico")

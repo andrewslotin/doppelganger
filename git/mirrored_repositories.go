@@ -3,37 +3,27 @@ package git
 import (
 	"errors"
 	"io/ioutil"
-	"log"
 	"path/filepath"
 )
 
 // DefaultMaster is a default name for master branch.
 const DefaultMaster = "master"
 
-var (
-	gitCmd Command
-
-	// ErrorNotMirrored is an error returned by Get if given repository does not exist.
-	ErrorNotMirrored = errors.New("mirror not found")
-)
+// ErrorNotMirrored is an error returned by Get if given repository does not exist.
+var ErrorNotMirrored = errors.New("mirror not found")
 
 // MirroredRepositories is a type that is intended for maintaining local Git repository mirrors
 // located under the mirrorPath directory.
 type MirroredRepositories struct {
+	cmd        Command
 	mirrorPath string
-}
-
-func init() {
-	var err error
-	if gitCmd, err = SystemGit(); err != nil {
-		log.Fatal(err)
-	}
 }
 
 // NewMirroredRepositories creates and initializes an instance of MirroredRepositories reading and creating
 // repositories under path directory.
-func NewMirroredRepositories(path string) *MirroredRepositories {
+func NewMirroredRepositories(path string, gitCommand Command) *MirroredRepositories {
 	return &MirroredRepositories{
+		cmd:        gitCommand,
 		mirrorPath: path,
 	}
 }
