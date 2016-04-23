@@ -118,3 +118,13 @@ func TestMirroredRepositoriesGet_NotMirrored(t *testing.T) {
 	cmd.AssertExpectations(t)
 	assert.Equal(t, err, ErrorNotMirrored)
 }
+
+func TestMirroredRepositoriesCreate(t *testing.T) {
+	cmd := &commandMock{}
+	cmd.On("CloneMirror", "git@doppelganger:a/b", "mirrors/a/b").Return(nil)
+
+	mirroredRepos := NewMirroredRepositories("mirrors", cmd)
+	require.NoError(t, mirroredRepos.Create("a/b", "git@doppelganger:a/b"))
+
+	cmd.AssertExpectations(t)
+}
