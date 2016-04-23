@@ -1,4 +1,4 @@
-package git
+package git_test
 
 import (
 	"io/ioutil"
@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/andrewslotin/doppelganger/git"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -73,7 +74,7 @@ func TestMirroredRepositoriesAll(t *testing.T) {
 		cmd.On("CurrentBranch", path).Return(masterBranch)
 	}
 
-	mirroredRepos := NewMirroredRepositories(mirrorPath, cmd)
+	mirroredRepos := git.NewMirroredRepositories(mirrorPath, cmd)
 	mirrors, err := mirroredRepos.All()
 	require.NoError(t, err)
 	cmd.AssertExpectations(t)
@@ -91,7 +92,7 @@ func TestMirroredRepositoriesGet_MirrorExists(t *testing.T) {
 	cmd.On("CurrentBranch", "mirrors/a/b").Return("production")
 	cmd.On("LastCommit", "mirrors/a/b").Return("abc123", "Jon Doe", "HI MOM", "2016-04-23 16:12:39", nil)
 
-	mirroredRepos := NewMirroredRepositories("mirrors", cmd)
+	mirroredRepos := git.NewMirroredRepositories("mirrors", cmd)
 	repo, err := mirroredRepos.Get("a/b")
 	require.NoError(t, err)
 
@@ -112,18 +113,18 @@ func TestMirroredRepositoriesGet_NotMirrored(t *testing.T) {
 	cmd := &commandMock{}
 	cmd.On("IsRepository", "mirrors/a/b").Return(false)
 
-	mirroredRepos := NewMirroredRepositories("mirrors", cmd)
+	mirroredRepos := git.NewMirroredRepositories("mirrors", cmd)
 	_, err := mirroredRepos.Get("a/b")
 
 	cmd.AssertExpectations(t)
-	assert.Equal(t, err, ErrorNotMirrored)
+	assert.Equal(t, err, git.ErrorNotMirrored)
 }
 
 func TestMirroredRepositoriesCreate(t *testing.T) {
 	cmd := &commandMock{}
 	cmd.On("CloneMirror", "git@doppelganger:a/b", "mirrors/a/b").Return(nil)
 
-	mirroredRepos := NewMirroredRepositories("mirrors", cmd)
+	mirroredRepos := git.NewMirroredRepositories("mirrors", cmd)
 	require.NoError(t, mirroredRepos.Create("a/b", "git@doppelganger:a/b"))
 
 	cmd.AssertExpectations(t)
@@ -133,7 +134,7 @@ func TestMirroredRepositoriesUpdate(t *testing.T) {
 	cmd := &commandMock{}
 	cmd.On("UpdateRemote", "mirrors/a/b").Return(nil)
 
-	mirroredRepos := NewMirroredRepositories("mirrors", cmd)
+	mirroredRepos := git.NewMirroredRepositories("mirrors", cmd)
 	require.NoError(t, mirroredRepos.Update("a/b"))
 
 	cmd.AssertExpectations(t)

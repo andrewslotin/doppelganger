@@ -1,4 +1,4 @@
-package git
+package git_test
 
 import (
 	"encoding/json"
@@ -9,6 +9,8 @@ import (
 	"net/url"
 	"testing"
 
+	"github.com/andrewslotin/doppelganger/git"
+	"github.com/andrewslotin/doppelganger/git/internal"
 	"github.com/google/go-github/github"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,29 +19,29 @@ import (
 )
 
 func TestParseRepositoryName(t *testing.T) {
-	owner, repo := ParseRepositoryName("test/me")
+	owner, repo := git.ParseRepositoryName("test/me")
 	assert.Equal(t, owner, "test")
 	assert.Equal(t, repo, "me")
 }
 
 func TestNewGithubRepositories_WithToken(t *testing.T) {
-	ctx := context.WithValue(context.Background(), GithubToken, "secret_token")
+	ctx := context.WithValue(context.Background(), git.GithubToken, "secret_token")
 
-	r, err := NewGithubRepositories(ctx)
+	r, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err, "Expected NewGithubRepositories to succeed")
 	assert.NotNil(t, r, "Expected NewGithubRepositories to return new instance")
 }
 
 func TestNewGithubRepositories_NoToken(t *testing.T) {
-	_, err := NewGithubRepositories(context.Background())
-	assert.Error(t, err, "Expected NewGithubRepositories to return an error")
+	_, err := git.NewGithubRepositories(context.Background())
+	assert.Error(t, err, "Expected git.NewGithubRepositories to return an error")
 }
 
 func TestNewGithubRepositories_EmptyToken(t *testing.T) {
-	ctx := context.WithValue(context.Background(), GithubToken, "")
+	ctx := context.WithValue(context.Background(), git.GithubToken, "")
 
-	_, err := NewGithubRepositories(ctx)
-	assert.Error(t, err, "Expected NewGithubRepositories to return an error")
+	_, err := git.NewGithubRepositories(ctx)
+	assert.Error(t, err, "Expected git.NewGithubRepositories to return an error")
 }
 
 func TestGithubRepositoriesAll_SingleRepository_DefaultFields(t *testing.T) {
@@ -53,7 +55,7 @@ func TestGithubRepositoriesAll_SingleRepository_DefaultFields(t *testing.T) {
                 }]`)
 	})
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	repos, err := githubRepos.All()
@@ -83,7 +85,7 @@ func TestGithubRepositoriesAll_SingleRepository_AllFields(t *testing.T) {
                 }]`)
 	})
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	repos, err := githubRepos.All()
@@ -112,7 +114,7 @@ func TestGithubRepositoriesAll_MultipleRepositories(t *testing.T) {
                 }]`)
 	})
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	repos, err := githubRepos.All()
@@ -134,7 +136,7 @@ func TestGithubRepositoriesAll_SkipWithoutGitURL(t *testing.T) {
                 }]`)
 	})
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	repos, err := githubRepos.All()
@@ -158,7 +160,7 @@ func TestGithubRepositoriesAll_SkipWithoutFullName(t *testing.T) {
                 }]`)
 	})
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	repos, err := githubRepos.All()
@@ -186,7 +188,7 @@ func TestGithubRepositoriesAll_HandlePagination(t *testing.T) {
 		fmt.Fprint(w, `[{"full_name": "user1/repo1","git_url": "git:git@github.com:user1/repo1.git"}]`)
 	})
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	repos, err := githubRepos.All()
@@ -224,7 +226,7 @@ func TestGithubRepositoriesGet_RepositoryExists(t *testing.T) {
 		}`)
 	})
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	repo, err := githubRepos.Get("user1/repo1")
@@ -238,11 +240,11 @@ func TestGithubRepositoriesGet_NotFound(t *testing.T) {
 	ctx, _, teardown := setup()
 	defer teardown()
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	_, err = githubRepos.Get("user1/repo1")
-	assert.Equal(t, err, ErrorNotFound)
+	assert.Equal(t, err, git.ErrorNotFound)
 }
 
 func TestGithubRepositoriesTrack(t *testing.T) {
@@ -266,7 +268,7 @@ func TestGithubRepositoriesTrack(t *testing.T) {
 		fmt.Fprint(w, `{"id":1}`)
 	})
 
-	githubRepos, err := NewGithubRepositories(ctx)
+	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
 	err = githubRepos.Track("user1/repo1", "http://example.com/cb")
@@ -282,8 +284,8 @@ func setup() (ctx context.Context, mux *http.ServeMux, teardownFn func()) {
 	client.BaseURL = url
 
 	ctx = context.Background()
-	ctx = context.WithValue(ctx, GithubToken, "secret_token")
-	ctx = context.WithValue(ctx, httpClient, client)
+	ctx = context.WithValue(ctx, git.GithubToken, "secret_token")
+	ctx = context.WithValue(ctx, internal.HttpClient, client)
 
 	return ctx, mux, server.Close
 }
