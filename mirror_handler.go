@@ -135,7 +135,16 @@ func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName strin
 }
 
 func (handler *MirrorHandler) redirectToRepository(w http.ResponseWriter, req *http.Request, repoName string) {
-	http.Redirect(w, req, fmt.Sprintf("/mirrored?repo=%s", url.QueryEscape(repoName)), http.StatusSeeOther)
+	http.Redirect(w, req, "/mirror/"+repoName, http.StatusSeeOther)
+}
+
+func (handler *MirrorHandler) fetchRepoFromRequest(req *http.Request) (string, bool) {
+	owner, repo := req.URL.Query().Get(":owner"), req.URL.Query().Get(":repo")
+	if owner != "" && repo != "" {
+		return "", false
+	}
+
+	return owner + "/" + repo, true
 }
 
 func apiHookURL(host string, isSSL bool) *url.URL {

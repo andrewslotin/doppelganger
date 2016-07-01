@@ -32,7 +32,11 @@ func NewRepoHandler(repositoryService git.RepositoryService) *RepoHandler {
 func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
 
-	repoName := handler.fetchRepoFromRequest(req)
+	repoName, ok := handler.fetchRepoFromRequest(req)
+	if !ok {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
+	}
 
 	switch req.Method {
 	case "GET":
@@ -78,6 +82,11 @@ func (handler *RepoHandler) NewMirror(w http.ResponseWriter, repo *git.Repositor
 	return newMirrorTemplate.Execute(w, repo)
 }
 
-func (handler *RepoHandler) fetchRepoFromRequest(req *http.Request) string {
-	return req.FormValue("repo")
+func (handler *RepoHandler) fetchRepoFromRequest(req *http.Request) (string, bool) {
+	owner, repo := req.URL.Query().Get(":owner"), req.URL.Query().Get(":repo")
+	if owner == "" || repo == "" {
+		return "", false
+	}
+
+	return owner + "/" + repo, true
 }
