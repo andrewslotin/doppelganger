@@ -17,7 +17,8 @@ clean:
 	go clean ./...
 	rm doppelganger-$(VERSION)_*.tar.gz 2>/dev/null || true
 
+PACKAGES := $$(go list ./... | grep -v /vendor/ )
 test:
-	go test github.com/andrewslotin/doppelganger/git
+	GO15VENDOREXPERIMENT=1 go test $(PACKAGES)
 
-.PHONY: clean
+.PHONY: build test release clean

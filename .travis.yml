@@ -8,4 +8,4 @@ go:
   - tip
 
 install:
- - go get github.com/stretchr/testify github.com/google/go-github/github golang.org/x/net/context golang.org/x/oauth2
+ - go get github.com/stretchr/testify
