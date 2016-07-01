@@ -29,11 +29,6 @@ func NewReposHandler(repositoryService git.RepositoryService) *ReposHandler {
 func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
 
-	if repoName := req.FormValue("repo"); repoName != "" {
-		NewRepoHandler(handler.repositories).ServeHTTP(w, req)
-		return
-	}
-
 	repos, err := handler.repositories.All()
 	if err != nil {
 		log.Printf("failed to get repos (%s) %v", err, req)

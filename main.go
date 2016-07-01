@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/andrewslotin/doppelganger/git"
+	"github.com/bmizerany/pat"
 )
 
 // Version and BuildDate are used in help message and set by Makefile
@@ -56,19 +57,24 @@ func main() {
 	}
 	mirroredRepositoryService := git.NewMirroredRepositories(*mirrorDir, gitCmd)
 
-	http.HandleFunc("/favicon.ico", func(w http.ResponseWriter, r *http.Request) {
+	mux := pat.New()
+	mux.Get("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "./assets/favicon.ico")
-	})
+	}))
 
-	http.Handle("/", NewReposHandler(repositoryService))
-	http.Handle("/mirrored", NewReposHandler(mirroredRepositoryService))
-	http.Handle("/mirror", NewMirrorHandler(repositoryService, mirroredRepositoryService, repositoryService))
-	http.Handle("/apihook", NewWebhookHandler(mirroredRepositoryService))
-	http.Handle("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
+	mux.Get("/", NewReposHandler(repositoryService))
+	mux.Get("/:owner/:repo", NewRepoHandler(repositoryService))
+	mux.Get("/mirror", NewReposHandler(mirroredRepositoryService))
+	mux.Post("/mirror", NewMirrorHandler(repositoryService, mirroredRepositoryService, repositoryService))
+	mux.Get("/mirror/:owner/:repo", NewRepoHandler(mirroredRepositoryService))
+	mux.Get("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
+
+	// GitHub webhooks
+	mux.Post("/apihook", NewWebhookHandler(mirroredRepositoryService))
 
 	*addr = fmt.Sprintf("%s:%d", *addr, *port)
 	log.Printf("doppelganger is listening on %s", *addr)
-	if err := http.ListenAndServe(*addr, nil); err != nil {
+	if err := http.ListenAndServe(*addr, mux); err != nil {
 		log.Panic(err)
 	}
 }
