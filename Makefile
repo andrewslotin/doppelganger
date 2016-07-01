@@ -19,6 +19,6 @@ clean:
 
 PACKAGES := $$(go list ./... | grep -v /vendor/ )
 test:
-	GO15VENDOREXPERIMENT=1 go test $(PACKAGES)
+	go test $(PACKAGES)
 
 .PHONY: build test release clean
