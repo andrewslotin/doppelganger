@@ -17,11 +17,11 @@
     <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
       <ul class="nav nav-pills">
         {{ if .Mirrored }}
-        <li role="presentation"><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
-        <li role="presentation" class="active"><a href="/mirrored?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
+        <li role="presentation"><a href="/{{ .FullName }}">Source repository</a></li>
+        <li role="presentation" class="active"><a href="/mirror/{{ .FullName }}">Mirrored copy</a></li>
         {{ else }}
-        <li role="presentation" class="active"><a href="/?repo={{ .FullName | urlquery }}">Source repository</a></li>
-        <li role="presentation"><a href="/mirrored?repo={{ .FullName | urlquery }}">Mirrored copy</a></li>
+        <li role="presentation" class="active"><a href="/{{ .FullName }}">Source repository</a></li>
+        <li role="presentation"><a href="/mirror/{{ .FullName }}">Mirrored copy</a></li>
         <li role="presentation"><a href="{{ .HTMLURL }}">View on GitHub</a></li>
         {{ end }}
         <li role="presentation"><a href="/">Back to GitHub repositories list</a></li>
@@ -52,9 +52,10 @@
       </p>
       <p>
         Add mirror as a new remote to an already existing repository and use set it as upstream for local <samp>master<samp>:
-        <pre>git remote add mirror git@&lt;mirror-host&gt;:&lt;mirror-dir&gt;/{{ .FullName }}.git
-  git branch --unset-upstream master
-  git branch --set-upstream master mirror/master</pre>
+        <pre>
+git remote add mirror git@&lt;mirror-host&gt;:&lt;mirror-dir&gt;/{{ .FullName }}.git
+git branch --unset-upstream master
+git branch --set-upstream master mirror/master</pre>
       </p>
     </div>
   </div>

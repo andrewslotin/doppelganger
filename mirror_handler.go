@@ -39,8 +39,8 @@ func NewMirrorHandler(githubRepos git.RepositoryService, mirroredRepos git.Mirro
 func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
 
-	repoName := req.FormValue("repo")
-	if repoName == "" {
+	repoName, ok := handler.fetchRepoFromRequest(req)
+	if !ok {
 		http.Error(w, "Missing source repository name", http.StatusBadRequest)
 		return
 	}
@@ -53,17 +53,16 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 			return
 		}
 
-		log.Printf("mirrored %s [%s]", repoName, time.Since(startTime))
-		if req.FormValue("notrack") != "" {
-			handler.redirectToRepository(w, req, repoName)
-			return
+		if req.FormValue("notrack") == "" && handler.trackRepoService != nil {
+			if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
+				log.Printf("failed to track changes for mirror %s: %s", repoName, err)
+				http.Error(w, "Failed to set up push web hook, please check logs for details", http.StatusInternalServerError)
+				return
+			}
 		}
 
-		// Redirect to /mirror?action=track&repo=<repoName> to set up webhook
-		q := req.Form
-		q.Set("action", "track")
-		req.URL.RawQuery = q.Encode()
-		http.Redirect(w, req, req.URL.String(), http.StatusSeeOther)
+		log.Printf("mirrored %s [%s]", repoName, time.Since(startTime))
+		handler.redirectToRepository(w, req, repoName)
 	case "update":
 		if err := handler.UpdateMirror(w, repoName); err != nil {
 			log.Printf("failed to update mirror %s: %s", repoName, err)
@@ -135,7 +134,16 @@ func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName strin
 }
 
 func (handler *MirrorHandler) redirectToRepository(w http.ResponseWriter, req *http.Request, repoName string) {
-	http.Redirect(w, req, fmt.Sprintf("/mirrored?repo=%s", url.QueryEscape(repoName)), http.StatusSeeOther)
+	http.Redirect(w, req, "/mirror/"+repoName, http.StatusSeeOther)
+}
+
+func (handler *MirrorHandler) fetchRepoFromRequest(req *http.Request) (string, bool) {
+	owner, repo := req.URL.Query().Get(":owner"), req.URL.Query().Get(":repo")
+	if owner != "" && repo != "" {
+		return "", false
+	}
+
+	return owner + "/" + repo, true
 }
 
 func apiHookURL(host string, isSSL bool) *url.URL {
