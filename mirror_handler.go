@@ -138,12 +138,8 @@ func (handler *MirrorHandler) redirectToRepository(w http.ResponseWriter, req *h
 }
 
 func (handler *MirrorHandler) fetchRepoFromRequest(req *http.Request) (string, bool) {
-	owner, repo := req.URL.Query().Get(":owner"), req.URL.Query().Get(":repo")
-	if owner != "" && repo != "" {
-		return "", false
-	}
-
-	return owner + "/" + repo, true
+	fullRepoName := req.FormValue("repo")
+	return fullRepoName, fullRepoName != ""
 }
 
 func apiHookURL(host string, isSSL bool) *url.URL {
