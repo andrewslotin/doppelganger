@@ -19,13 +19,20 @@ var (
 	Version   = "n/a"
 	BuildDate = "n/a"
 
-	printVersion = flag.Bool("version", false, "Print version and exit")
-	addr         = flag.String("addr", "", "Listen address")
-	port         = flag.Int("port", 8081, "Listen port")
-	mirrorDir    = flag.String("mirror", filepath.Join(os.Getenv("GOPATH"), "src", "github.com"), "Mirrored repositories directory")
+	args struct {
+		version   bool
+		addr      string
+		port      int
+		mirrorDir string
+	}
 )
 
 func init() {
+	flag.BoolVar(&args.version, "version", false, "Print version and exit")
+	flag.StringVar(&args.addr, "addr", "", "Listen address")
+	flag.IntVar(&args.port, "port", 8081, "Listen port")
+	flag.StringVar(&args.mirrorDir, "mirror", filepath.Join(os.Getenv("GOPATH"), "src", "github.com"), "Mirrored repositories directory")
+
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS]\n\nOptions:\n", os.Args[0])
 		flag.PrintDefaults()
@@ -35,7 +42,7 @@ func init() {
 
 func main() {
 	flag.Parse()
-	if *printVersion {
+	if args.version {
 		fmt.Printf("Doppelganger, version %s, build date %s\n", Version, BuildDate)
 		os.Exit(0)
 	}
@@ -58,7 +65,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	mirroredRepositoryService := git.NewMirroredRepositories(*mirrorDir, gitCmd)
+	mirroredRepositoryService := git.NewMirroredRepositories(args.mirrorDir, gitCmd)
 
 	mux := pat.New()
 	mux.Get("/favicon.ico", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -75,9 +82,9 @@ func main() {
 	// GitHub webhooks
 	mux.Post("/apihook", NewWebhookHandler(mirroredRepositoryService))
 
-	*addr = fmt.Sprintf("%s:%d", *addr, *port)
-	log.Printf("doppelganger is listening on %s", *addr)
-	if err := http.ListenAndServe(*addr, mux); err != nil {
+	addr := fmt.Sprintf("%s:%d", args.addr, args.port)
+	log.Printf("doppelganger is listening on %s", addr)
+	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Panic(err)
 	}
 }
