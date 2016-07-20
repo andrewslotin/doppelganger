@@ -19,14 +19,15 @@ var (
 	Version   = "n/a"
 	BuildDate = "n/a"
 
-	addr      = flag.String("addr", "", "Listen address")
-	port      = flag.Int("port", 8081, "Listen port")
-	mirrorDir = flag.String("mirror", filepath.Join(os.Getenv("GOPATH"), "src", "github.com"), "Mirrored repositories directory")
+	printVersion = flag.Bool("version", false, "Print version and exit")
+	addr         = flag.String("addr", "", "Listen address")
+	port         = flag.Int("port", 8081, "Listen port")
+	mirrorDir    = flag.String("mirror", filepath.Join(os.Getenv("GOPATH"), "src", "github.com"), "Mirrored repositories directory")
 )
 
 func init() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Doppelganger, version %s, build date %s\n\nUsage: %s [OPTIONS]\n\nOptions:\n", Version, BuildDate, os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [OPTIONS]\n\nOptions:\n", os.Args[0])
 		flag.PrintDefaults()
 		os.Exit(2)
 	}
@@ -34,6 +35,10 @@ func init() {
 
 func main() {
 	flag.Parse()
+	if *printVersion {
+		fmt.Printf("Doppelganger, version %s, build date %s\n", Version, BuildDate)
+		os.Exit(0)
+	}
 
 	log.SetOutput(os.Stderr)
 	log.SetFlags(log.LstdFlags)
