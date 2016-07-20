@@ -1,21 +1,25 @@
-VERSION = 1.0.2
-LDFLAGS = -X main.Version=$(VERSION) -X main.BuildDate=$(shell date +%F)
+VERSION := 1.0.2
+BUILDDATE :=$(shell date +%F)
+LDFLAGS := -X 'main.Version=$(VERSION)' -X 'main.BuildDate=$(BUILDDATE)'
 
-build: test 
-	@echo "Building v$(VERSION)"
-	GOOS=$(OS) GOARCH=$(ARCH) go build -ldflags "$(LDFLAGS)" -o doppelganger
+build: test doppelganger
 
 release: OS=linux
 release: ARCH=amd64
 release: doppelganger-$(VERSION)_$(OS)_$(ARCH).tar.gz
 
-doppelganger-$(VERSION)_$(OS)_$(ARCH).tar.gz: build
+doppelganger-$(VERSION)_$(OS)_$(ARCH).tar.gz: doppelganger
 	goupx doppelganger
 	tar czf doppelganger-$(VERSION)_$(OS)_$(ARCH).tar.gz assets/ templates/ doppelganger
 
+SOURCES := $(shell find . \( -name '*.go' -and -not -name '*_test.go' \))
+doppelganger: $(SOURCES)
+	@echo "Building v$(VERSION)"
+	GOOS=$(OS) GOARCH=$(ARCH) go build -ldflags "$(LDFLAGS)" -o doppelganger
+
 clean:
 	go clean ./...
-	rm doppelganger-$(VERSION)_*.tar.gz 2>/dev/null || true
+	rm -rf doppelganger-$(VERSION)_*.tar.gz
 
 PACKAGES := $$(go list ./... | grep -v /vendor/ )
 test:
