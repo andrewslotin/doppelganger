@@ -14,13 +14,11 @@ import (
 	"github.com/bmizerany/pat"
 )
 
-// Version and BuildDate are used in help message and set by Makefile
-const (
+var (
+	// Version and BuildDate are used in help message and set by Makefile
 	Version   = "n/a"
 	BuildDate = "n/a"
-)
 
-var (
 	addr      = flag.String("addr", "", "Listen address")
 	port      = flag.Int("port", 8081, "Listen port")
 	mirrorDir = flag.String("mirror", filepath.Join(os.Getenv("GOPATH"), "src", "github.com"), "Mirrored repositories directory")
