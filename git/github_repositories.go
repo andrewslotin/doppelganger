@@ -75,8 +75,8 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 				continue
 			}
 
-			if githubRepo.GitURL == nil {
-				log.Printf("[WARN] excluding GitHub repository without git_url %v", githubRepo)
+			if githubRepo.SSHURL == nil {
+				log.Printf("[WARN] excluding GitHub repository without ssh_url %v", githubRepo)
 				continue
 			}
 
@@ -226,7 +226,7 @@ func repositoryFromGithub(githubRepo *api.Repository) *Repository {
 		Description: *githubRepo.Description,
 		Master:      *githubRepo.DefaultBranch,
 		HTMLURL:     *githubRepo.HTMLURL,
-		GitURL:      *githubRepo.GitURL,
+		GitURL:      *githubRepo.SSHURL,
 	}
 }
 

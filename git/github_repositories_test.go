@@ -51,7 +51,7 @@ func TestGithubRepositoriesAll_SingleRepository_DefaultFields(t *testing.T) {
 	mux.HandleFunc("/user/repos", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `[{
                     "full_name": "user1/repo1",
-                    "git_url": "git@github.com:user1/repo1.git"
+                    "ssh_url": "git@github.com:user1/repo1.git"
                 }]`)
 	})
 
@@ -80,7 +80,7 @@ func TestGithubRepositoriesAll_SingleRepository_AllFields(t *testing.T) {
                     "full_name": "user1/repo1",
                     "description": "Repo1",
                     "default_branch": "production",
-                    "git_url": "git@github.com:user1/repo1.git",
+                    "ssh_url": "git@github.com:user1/repo1.git",
                     "html_url": "https://github.com/user1/repo1"
                 }]`)
 	})
@@ -107,10 +107,10 @@ func TestGithubRepositoriesAll_MultipleRepositories(t *testing.T) {
 	mux.HandleFunc("/user/repos", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `[{
                     "full_name": "user1/repo1",
-                    "git_url": "https://github.com/user1/repo1"
+                    "ssh_url": "https://github.com/user1/repo1"
                 },{
                     "full_name": "user2/repo2",
-                    "git_url": "https://github.com/user2/repo2"
+                    "ssh_url": "https://github.com/user2/repo2"
                 }]`)
 	})
 
@@ -132,7 +132,7 @@ func TestGithubRepositoriesAll_SkipWithoutGitURL(t *testing.T) {
                     "full_name": "user1/repo1"
                 },{
                     "full_name": "user2/repo2",
-                    "git_url": "git:git@github.com:user2/repo2.git"
+                    "ssh_url": "git:git@github.com:user2/repo2.git"
                 }]`)
 	})
 
@@ -154,9 +154,9 @@ func TestGithubRepositoriesAll_SkipWithoutFullName(t *testing.T) {
 	mux.HandleFunc("/user/repos", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, `[{
                     "full_name": "user1/repo1",
-                    "git_url": "git:git@github.com:user1/repo1.git"
+                    "ssh_url": "git:git@github.com:user1/repo1.git"
                 },{
-                    "git_url": "git:git@github.com:user2/repo2.git"
+                    "ssh_url": "git:git@github.com:user2/repo2.git"
                 }]`)
 	})
 
@@ -185,7 +185,7 @@ func TestGithubRepositoriesAll_HandlePagination(t *testing.T) {
 			w.Header().Set("Link", fmt.Sprintf(`<https://api.github.com/user/repos?page=2&per_page=%s>; rel="next"`, perPage))
 		}
 
-		fmt.Fprint(w, `[{"full_name": "user1/repo1","git_url": "git:git@github.com:user1/repo1.git"}]`)
+		fmt.Fprint(w, `[{"full_name": "user1/repo1","ssh_url": "git:git@github.com:user1/repo1.git"}]`)
 	})
 
 	githubRepos, err := git.NewGithubRepositories(ctx)
@@ -208,7 +208,7 @@ func TestGithubRepositoriesGet_RepositoryExists(t *testing.T) {
 		    "description":
 		    "Test repo",
 		    "default_branch":"production",
-		    "git_url":"git:git@github.com:user1/repo1.git",
+		    "ssh_url":"git:git@github.com:user1/repo1.git",
 		    "html_url": "https://github.com/user1/repo1"
 		}`)
 	})
