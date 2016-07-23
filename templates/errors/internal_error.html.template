@@ -1,0 +1,18 @@
+{{ define "title" }}Everything just went wrong{{ end }}
+
+{{ define "content" }}
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <div class="page-header">
+        <h1>:-(</h1>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <h3>There was an issue with your request</h3>
+      <p>{{ .Error }}</p>
+      <p><a href="https://github.com/andrewslotin/doppelganger/issues/new?labels=bug">Open an issue in Doppelganger GitHub repository</a></p>
+    </div>
+  </div>
+{{ end }}
