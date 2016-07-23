@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -50,23 +51,23 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 			if err := handler.NewMirror(w, repo); err != nil {
 				log.Printf("failed to render repo/mirror %s (%s)", repo.FullName, err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				WriteErrorPage(w, errors.New("Internal server error"), http.StatusInternalServerError)
 			} else {
 				log.Printf("rendered repo/mirror %s [%s]", repo.FullName, time.Since(startTime))
 			}
 		case nil: // Repository found
 			if err := handler.Show(w, repo); err != nil {
 				log.Printf("failed to render repo/show %s with latest commit from %q (%s)", repo.FullName, repo.Master, err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				WriteErrorPage(w, errors.New("Internal server error"), http.StatusInternalServerError)
 			} else {
 				log.Printf("rendered repo/show %s with latest commit from %q [%s]", repo.FullName, repo.Master, time.Since(startTime))
 			}
 		default: // Failed to fetch repository
 			log.Printf("failed to fetch %s (%s)", repoName, err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			WriteErrorPage(w, errors.New("Internal server error"), http.StatusInternalServerError)
 		}
 	case "POST":
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
+		WriteErrorPage(w, errors.New("Not implemented"), http.StatusNotImplemented)
 	default:
 		http.Error(w, "Not found", http.StatusNotFound)
 	}
