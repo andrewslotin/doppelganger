@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"html/template"
 	"log"
 	"net/http"
@@ -33,12 +32,13 @@ func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)
 	repos, err := handler.repositories.All()
 	if err != nil {
 		log.Printf("failed to get repos (%s) %v", err, req)
-		WriteErrorPage(w, errors.New("Internal server error"), http.StatusInternalServerError)
+		WriteErrorPage(w, UserError{Message: "Internal server error", OriginalError: err}, http.StatusInternalServerError)
 		return
 	}
 
 	if err := reposTemplate.Execute(w, repos); err != nil {
 		log.Printf("failed to render repos/index with %d entries (%s)", len(repos), err)
+		WriteErrorPage(w, UserError{Message: "Internal server error", OriginalError: err}, http.StatusInternalServerError)
 	} else {
 		log.Printf("rendered repos/index with %d entries [%s]", len(repos), time.Since(startTime))
 	}
