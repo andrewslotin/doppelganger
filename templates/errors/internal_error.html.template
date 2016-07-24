@@ -14,14 +14,21 @@
       <p>{{ .Error }}</p>
     </div>
   </div>
-  {{ if .OriginalError }}
+  {{ with .OriginalError }}
     <div class="row">
       <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
-        <a>Technical details</a>
-        <div class="hidden">
-          <a href="https://github.com/andrewslotin/doppelganger/issues/new?labels=bug">Open an issue in Doppelganger GitHub repository</a>
+        <a id="show-details" href="#details">Technical details</a>
+        <div id="details" class="hidden">
+          <p>{{ .Error }}</p>
+          <a href="https://github.com/andrewslotin/doppelganger/issues/new?labels=bug&title=Error%3A%20{{ .Error | urlquery }}">File a bug in Doppelganger on GitHub</a>
         </div>
       </div>
     </div>
+    <script type="text/javascript">
+      $("#show-details").click(function () {
+        $("#details").toggleClass("hidden show");
+        $(this).addClass("hidden");
+      });
+    </script>
   {{ end }}
 {{ end }}
