@@ -7,6 +7,7 @@ import (
 
 var (
 	internalErrorTemplate = template.Must(template.ParseFiles("templates/layout.html.template", "templates/errors/internal_error.html.template"))
+	notFoundErrorTemplate = template.Must(template.ParseFiles("templates/layout.html.template", "templates/errors/not_found.html.template"))
 )
 
 // UserError wraps an internal server error and replaces its message with a
@@ -27,4 +28,11 @@ func WriteErrorPage(w http.ResponseWriter, err error, status int) {
 	w.Header().Set("Content-Type", "text/html")
 	w.WriteHeader(status)
 	internalErrorTemplate.Execute(w, err)
+}
+
+// WriteNotFoundPage renders an HTTP 404 Not Found page with an optional message and a link back.
+func WriteNotFoundPage(w http.ResponseWriter, message, backURL string) {
+	w.Header().Set("Content-Type", "text/html")
+	w.WriteHeader(http.StatusNotFound)
+	notFoundErrorTemplate.Execute(w, struct{ Message, BackURL string }{message, backURL})
 }
