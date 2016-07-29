@@ -34,7 +34,7 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 	repoName, ok := handler.fetchRepoFromRequest(req)
 	if !ok {
-		http.Error(w, "Not found", http.StatusNotFound)
+		WriteNotFoundPage(w, "No such repository", "")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	case "GET":
 		switch repo, err := handler.repositories.Get(repoName); err {
 		case git.ErrorNotFound: // GitHub repository not found
-			http.Error(w, fmt.Sprintf("No such repository %q", repoName), http.StatusNotFound)
+			WriteNotFoundPage(w, fmt.Sprintf("No such repository %q", repoName), req.Referer())
 		case git.ErrorNotMirrored: // Mirror repository not found, offer to create a new one
 			repo = &git.Repository{
 				FullName: repoName,
@@ -68,7 +68,7 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	case "POST":
 		WriteErrorPage(w, UserError{Message: "Not implemented", BackURL: req.Referer()}, http.StatusNotImplemented)
 	default:
-		http.Error(w, "Not found", http.StatusNotFound)
+		WriteErrorPage(w, UserError{Message: fmt.Sprintf("%s requests are not supported", req.Method), BackURL: req.Referer()}, http.StatusNotImplemented)
 	}
 }
 

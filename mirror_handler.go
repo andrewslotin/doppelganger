@@ -98,7 +98,7 @@ func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName strin
 	case nil:
 		return handler.mirroredRepos.Create(repo.FullName, repo.GitURL)
 	case git.ErrorNotFound:
-		http.Error(w, "Source repository not found", http.StatusNotFound)
+		WriteNotFoundPage(w, fmt.Sprintf("No such GitHub repository: %s", repoName), "/")
 		return nil
 	default:
 		return err
@@ -112,7 +112,7 @@ func (handler *MirrorHandler) SetupChangeTracking(w http.ResponseWriter, req *ht
 	case nil:
 		return handler.trackRepoService.Track(repo.FullName, apiHookURL(req.Host, req.TLS != nil).String())
 	case git.ErrorNotMirrored:
-		http.Error(w, "Repository not mirrored", http.StatusNotFound)
+		WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/"+repoName)
 		return nil
 	default:
 		return err
@@ -126,7 +126,7 @@ func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName strin
 	case nil:
 		return handler.mirroredRepos.Update(repo.FullName)
 	case git.ErrorNotMirrored:
-		http.Error(w, "Source repository not mirrored", http.StatusNotFound)
+		WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/"+repoName)
 		return nil
 	default:
 		return err
