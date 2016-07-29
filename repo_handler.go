@@ -34,7 +34,7 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 	repoName, ok := handler.fetchRepoFromRequest(req)
 	if !ok {
-		http.Error(w, "Not found", http.StatusNotFound)
+		WriteNotFoundPage(w, "No such repository", "")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	case "GET":
 		switch repo, err := handler.repositories.Get(repoName); err {
 		case git.ErrorNotFound: // GitHub repository not found
-			http.Error(w, fmt.Sprintf("No such repository %q", repoName), http.StatusNotFound)
+			WriteNotFoundPage(w, fmt.Sprintf("No such repository %q", repoName), req.Referer())
 		case git.ErrorNotMirrored: // Mirror repository not found, offer to create a new one
 			repo = &git.Repository{
 				FullName: repoName,
@@ -50,25 +50,25 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 			if err := handler.NewMirror(w, repo); err != nil {
 				log.Printf("failed to render repo/mirror %s (%s)", repo.FullName, err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 			} else {
 				log.Printf("rendered repo/mirror %s [%s]", repo.FullName, time.Since(startTime))
 			}
 		case nil: // Repository found
 			if err := handler.Show(w, repo); err != nil {
 				log.Printf("failed to render repo/show %s with latest commit from %q (%s)", repo.FullName, repo.Master, err)
-				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 			} else {
 				log.Printf("rendered repo/show %s with latest commit from %q [%s]", repo.FullName, repo.Master, time.Since(startTime))
 			}
 		default: // Failed to fetch repository
 			log.Printf("failed to fetch %s (%s)", repoName, err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 		}
 	case "POST":
-		http.Error(w, "Not implemented", http.StatusNotImplemented)
+		WriteErrorPage(w, UserError{Message: "Not implemented", BackURL: req.Referer()}, http.StatusNotImplemented)
 	default:
-		http.Error(w, "Not found", http.StatusNotFound)
+		WriteErrorPage(w, UserError{Message: fmt.Sprintf("%s requests are not supported", req.Method), BackURL: req.Referer()}, http.StatusNotImplemented)
 	}
 }
 

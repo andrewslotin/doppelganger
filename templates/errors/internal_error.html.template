@@ -1,0 +1,48 @@
+{{ define "title" }}Everything just went wrong{{ end }}
+
+{{ define "content" }}
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <div class="page-header text-center">
+        <h1>:-(</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <ul class="nav nav-pills">
+        {{ if .BackURL }}
+          <li role="presentation"><a href="/{{ .BackURL }}">Go back</a></li>
+        {{ end }}
+        <li role="presentation"><a href="/">GitHub repositories list</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <h3>There was an issue with your request</h3>
+      <p>{{ .Error }}</p>
+    </div>
+  </div>
+
+  {{ with .OriginalError }}
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+        <a id="show-details" href="#details">Technical details</a>
+        <div id="details" class="hidden">
+          <h4>Here is what exactly happened</h4>
+          <p>{{ .Error }}</p>
+          <a href="https://github.com/andrewslotin/doppelganger/issues/new?labels=bug&title=Error%3A%20{{ .Error | urlquery }}">File a bug in Doppelganger on GitHub</a>
+        </div>
+      </div>
+    </div>
+    <script type="text/javascript">
+      $("#show-details").click(function () {
+        $("#details").toggleClass("hidden show");
+        $(this).addClass("hidden");
+      });
+    </script>
+  {{ end }}
+{{ end }}

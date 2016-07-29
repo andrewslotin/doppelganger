@@ -41,22 +41,32 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 	repoName, ok := handler.fetchRepoFromRequest(req)
 	if !ok {
-		http.Error(w, "Missing source repository name", http.StatusBadRequest)
+		WriteErrorPage(w, UserError{Message: "Missing source repository name", BackURL: req.Referer()}, http.StatusBadRequest)
 		return
 	}
 
 	switch action := strings.ToLower(req.FormValue("action")); action {
 	case "create":
 		if err := handler.CreateMirror(w, repoName); err != nil {
-			log.Printf("failed to create mirror %s: %s", repoName, err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			if err == git.ErrorNotFound {
+				WriteNotFoundPage(w, fmt.Sprintf("No such GitHub repository: %s", repoName), "/")
+			} else {
+				log.Printf("failed to create mirror %s: %s", repoName, err)
+				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+			}
+
 			return
 		}
 
 		if req.FormValue("notrack") == "" && handler.trackRepoService != nil {
 			if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
-				log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-				http.Error(w, "Failed to set up push web hook, please check logs for details", http.StatusInternalServerError)
+				if err == git.ErrorNotMirrored {
+					WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/"+repoName)
+				} else {
+					log.Printf("failed to track changes for mirror %s: %s", repoName, err)
+					WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+				}
+
 				return
 			}
 		}
@@ -65,8 +75,13 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		handler.redirectToRepository(w, req, repoName)
 	case "update":
 		if err := handler.UpdateMirror(w, repoName); err != nil {
-			log.Printf("failed to update mirror %s: %s", repoName, err)
-			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			if err == git.ErrorNotMirrored {
+				WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/"+repoName)
+			} else {
+				log.Printf("failed to update mirror %s: %s", repoName, err)
+				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+			}
+
 			return
 		}
 
@@ -74,63 +89,56 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		handler.redirectToRepository(w, req, repoName)
 	case "track":
 		if handler.trackRepoService == nil {
-			http.Error(w, "Tracking changes not supported", http.StatusNotImplemented)
+			WriteErrorPage(w, UserError{Message: "Tracking changes not supported", BackURL: req.Referer()}, http.StatusNotImplemented)
 			return
 		}
 
 		if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
-			log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-			http.Error(w, "Failed to set up push web hook, please check logs for details", http.StatusInternalServerError)
+			if err == git.ErrorNotMirrored {
+				WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/"+repoName)
+			} else {
+				log.Printf("failed to track changes for mirror %s: %s", repoName, err)
+				WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+			}
+
 			return
 		}
 
 		log.Printf("set up push changes hook for %s [%s]", repoName, time.Since(startTime))
 		handler.redirectToRepository(w, req, repoName)
 	default:
-		http.Error(w, fmt.Sprintf("Unsupported action %q", action), http.StatusBadRequest)
+		WriteErrorPage(w, UserError{Message: fmt.Sprintf("Unsupported action %q", action), BackURL: req.Referer()}, http.StatusBadRequest)
 	}
 }
 
 // CreateMirror searches for a repository in githubRepos and creates its mirror.
-// If there is no such repository an HTTP 404 response will be sent.
 func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName string) error {
-	switch repo, err := handler.githubRepos.Get(repoName); err {
-	case nil:
-		return handler.mirroredRepos.Create(repo.FullName, repo.GitURL)
-	case git.ErrorNotFound:
-		http.Error(w, "Source repository not found", http.StatusNotFound)
-		return nil
-	default:
+	repo, err := handler.githubRepos.Get(repoName)
+	if err != nil {
 		return err
 	}
+
+	return handler.mirroredRepos.Create(repo.FullName, repo.GitURL)
 }
 
 // SetupChangeTracking searches for a repository in githubRepos and sets up changes tracker using trackingService.Track().
-// If there is no such repository an HTTP 404 response will be sent.
 func (handler *MirrorHandler) SetupChangeTracking(w http.ResponseWriter, req *http.Request, repoName string) error {
-	switch repo, err := handler.mirroredRepos.Get(repoName); err {
-	case nil:
-		return handler.trackRepoService.Track(repo.FullName, apiHookURL(req.Host, req.TLS != nil).String())
-	case git.ErrorNotMirrored:
-		http.Error(w, "Repository not mirrored", http.StatusNotFound)
-		return nil
-	default:
+	repo, err := handler.mirroredRepos.Get(repoName)
+	if err != nil {
 		return err
 	}
+
+	return handler.trackRepoService.Track(repo.FullName, apiHookURL(req.Host, req.TLS != nil).String())
 }
 
 // UpdateMirror updates an existing mirror synchronizing its with source.
-// If there is no such repository an HTTP 404 response will be sent.
 func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName string) error {
-	switch repo, err := handler.mirroredRepos.Get(repoName); err {
-	case nil:
-		return handler.mirroredRepos.Update(repo.FullName)
-	case git.ErrorNotMirrored:
-		http.Error(w, "Source repository not mirrored", http.StatusNotFound)
-		return nil
-	default:
+	repo, err := handler.mirroredRepos.Get(repoName)
+	if err != nil {
 		return err
 	}
+
+	return handler.mirroredRepos.Update(repo.FullName)
 }
 
 func (handler *MirrorHandler) redirectToRepository(w http.ResponseWriter, req *http.Request, repoName string) {
