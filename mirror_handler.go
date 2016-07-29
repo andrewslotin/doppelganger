@@ -41,7 +41,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 	repoName, ok := handler.fetchRepoFromRequest(req)
 	if !ok {
-		WriteErrorPage(w, UserError{Message: "Missing source repository name"}, http.StatusBadRequest)
+		WriteErrorPage(w, UserError{Message: "Missing source repository name", BackURL: req.Referer()}, http.StatusBadRequest)
 		return
 	}
 
@@ -49,14 +49,14 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 	case "create":
 		if err := handler.CreateMirror(w, repoName); err != nil {
 			log.Printf("failed to create mirror %s: %s", repoName, err)
-			WriteErrorPage(w, UserError{Message: "Internal server error", OriginalError: err}, http.StatusInternalServerError)
+			WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 			return
 		}
 
 		if req.FormValue("notrack") == "" && handler.trackRepoService != nil {
 			if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
 				log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-				WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", OriginalError: err}, http.StatusInternalServerError)
+				WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 				return
 			}
 		}
@@ -66,7 +66,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 	case "update":
 		if err := handler.UpdateMirror(w, repoName); err != nil {
 			log.Printf("failed to update mirror %s: %s", repoName, err)
-			WriteErrorPage(w, UserError{Message: "Internal server error", OriginalError: err}, http.StatusInternalServerError)
+			WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 			return
 		}
 
@@ -74,20 +74,20 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		handler.redirectToRepository(w, req, repoName)
 	case "track":
 		if handler.trackRepoService == nil {
-			WriteErrorPage(w, UserError{Message: "Tracking changes not supported"}, http.StatusNotImplemented)
+			WriteErrorPage(w, UserError{Message: "Tracking changes not supported", BackURL: req.Referer()}, http.StatusNotImplemented)
 			return
 		}
 
 		if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
 			log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-			WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", OriginalError: err}, http.StatusInternalServerError)
+			WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 			return
 		}
 
 		log.Printf("set up push changes hook for %s [%s]", repoName, time.Since(startTime))
 		handler.redirectToRepository(w, req, repoName)
 	default:
-		WriteErrorPage(w, UserError{Message: fmt.Sprintf("Unsupported action %q", action)}, http.StatusBadRequest)
+		WriteErrorPage(w, UserError{Message: fmt.Sprintf("Unsupported action %q", action), BackURL: req.Referer()}, http.StatusBadRequest)
 	}
 }
 

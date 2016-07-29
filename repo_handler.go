@@ -50,23 +50,23 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 			if err := handler.NewMirror(w, repo); err != nil {
 				log.Printf("failed to render repo/mirror %s (%s)", repo.FullName, err)
-				WriteErrorPage(w, UserError{Message: "Internal server error", OriginalError: err}, http.StatusInternalServerError)
+				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 			} else {
 				log.Printf("rendered repo/mirror %s [%s]", repo.FullName, time.Since(startTime))
 			}
 		case nil: // Repository found
 			if err := handler.Show(w, repo); err != nil {
 				log.Printf("failed to render repo/show %s with latest commit from %q (%s)", repo.FullName, repo.Master, err)
-				WriteErrorPage(w, UserError{Message: "Internal server error", OriginalError: err}, http.StatusInternalServerError)
+				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 			} else {
 				log.Printf("rendered repo/show %s with latest commit from %q [%s]", repo.FullName, repo.Master, time.Since(startTime))
 			}
 		default: // Failed to fetch repository
 			log.Printf("failed to fetch %s (%s)", repoName, err)
-			WriteErrorPage(w, UserError{Message: "Internal server error", OriginalError: err}, http.StatusInternalServerError)
+			WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 		}
 	case "POST":
-		WriteErrorPage(w, UserError{Message: "Not implemented"}, http.StatusNotImplemented)
+		WriteErrorPage(w, UserError{Message: "Not implemented", BackURL: req.Referer()}, http.StatusNotImplemented)
 	default:
 		http.Error(w, "Not found", http.StatusNotFound)
 	}

@@ -13,6 +13,7 @@ var (
 // user-friendly version, while keeping the original error for inspection.
 type UserError struct {
 	Message       string
+	BackURL       string
 	OriginalError error
 }
 
