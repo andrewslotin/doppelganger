@@ -41,5 +41,11 @@
     <div class="content">
       {{ block "content" . }}{{ end }}
     </div>
+
+    <footer class="footer">
+      <div class="container">
+        <p class="text-muted text-center">Doppelganger 1.0.4</p>
+      </div>
+    </footer>
   </body>
 </html>
