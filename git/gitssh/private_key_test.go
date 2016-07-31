@@ -1,4 +1,4 @@
-package ssh_test
+package gitssh_test
 
 import (
 	"crypto/rand"
@@ -7,11 +7,11 @@ import (
 	"os"
 	"testing"
 
-	"github.com/andrewslotin/doppelganger/git/ssh"
+	"golang.org/x/crypto/ssh"
+
+	"github.com/andrewslotin/doppelganger/git/gitssh"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	crypto_ssh "golang.org/x/crypto/ssh"
 )
 
 func TestReadPrivateRSAKey_ValidFile(t *testing.T) {
@@ -19,7 +19,7 @@ func TestReadPrivateRSAKey_ValidFile(t *testing.T) {
 	pubkey, err := readTestPublicSSHKey("./testdata/test_key_rsa.pub")
 	require.NoError(t, err)
 
-	pkey, err := ssh.ReadPrivateRSAKey("./testdata/test_key_rsa")
+	pkey, err := gitssh.ReadPrivateRSAKey("./testdata/test_key_rsa")
 	require.NoError(t, err)
 	require.NoError(t, pkey.Validate())
 
@@ -33,7 +33,7 @@ func TestReadPrivateRSAKey_NoFile(t *testing.T) {
 	require.NoError(t, err)
 	cleanup()
 
-	_, err = ssh.ReadPrivateRSAKey(path)
+	_, err = gitssh.ReadPrivateRSAKey(path)
 	assert.Error(t, err)
 }
 
@@ -42,7 +42,7 @@ func TestReadPrivateRSAKey_EmptyFile(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	_, err = ssh.ReadPrivateRSAKey(path)
+	_, err = gitssh.ReadPrivateRSAKey(path)
 	assert.Error(t, err)
 }
 
@@ -56,12 +56,12 @@ func TestReadPrivateRSAKey_NotPEMFile(t *testing.T) {
 	fd.Write([]byte("This is not a private key file!\n"))
 	fd.Close()
 
-	_, err = ssh.ReadPrivateRSAKey(path)
+	_, err = gitssh.ReadPrivateRSAKey(path)
 	assert.Error(t, err)
 }
 
 func TestReadPrivateRSAKey_NotRSAKey(t *testing.T) {
-	_, err := ssh.ReadPrivateRSAKey("./testdata/test_key_dsa")
+	_, err := gitssh.ReadPrivateRSAKey("./testdata/test_key_dsa")
 	assert.Error(t, err)
 }
 
@@ -70,7 +70,7 @@ func TestCreatePrivateRSAKey_GeneratesValidKey(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	pkey, err := ssh.CreatePrivateRSAKey(path)
+	pkey, err := gitssh.CreatePrivateRSAKey(path)
 	require.NoError(t, err)
 	require.NoError(t, pkey.Validate())
 }
@@ -80,13 +80,13 @@ func TestCreatePrivateRSAKey_StoresReadableKey(t *testing.T) {
 	require.NoError(t, err)
 	defer cleanup()
 
-	generatedPkey, err := ssh.CreatePrivateRSAKey(path)
+	generatedPkey, err := gitssh.CreatePrivateRSAKey(path)
 	require.NoError(t, err)
 
-	decodedPkey, err := ssh.ReadPrivateRSAKey(path)
+	decodedPkey, err := gitssh.ReadPrivateRSAKey(path)
 	require.NoError(t, err)
 
-	pubkey, err := crypto_ssh.NewPublicKey(&generatedPkey.PublicKey)
+	pubkey, err := ssh.NewPublicKey(&generatedPkey.PublicKey)
 	require.NoError(t, err)
 
 	ok, err := testValidRSAKeyPair(decodedPkey, pubkey)
@@ -94,13 +94,13 @@ func TestCreatePrivateRSAKey_StoresReadableKey(t *testing.T) {
 	assert.True(t, ok)
 }
 
-func readTestPublicSSHKey(path string) (crypto_ssh.PublicKey, error) {
+func readTestPublicSSHKey(path string) (ssh.PublicKey, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
 
-	pubkey, _, _, _, err := crypto_ssh.ParseAuthorizedKey(data)
+	pubkey, _, _, _, err := ssh.ParseAuthorizedKey(data)
 	return pubkey, err
 }
 
@@ -114,10 +114,10 @@ func mkTempFile() (path string, cleanupFn func(), err error) {
 }
 
 // Sign a message given private key and check that the signature can be verified with provided public key.
-func testValidRSAKeyPair(pkey *rsa.PrivateKey, pubkey crypto_ssh.PublicKey) (bool, error) {
+func testValidRSAKeyPair(pkey *rsa.PrivateKey, pubkey ssh.PublicKey) (bool, error) {
 	msg := []byte("Test message")
 
-	signer, err := crypto_ssh.NewSignerFromKey(pkey)
+	signer, err := ssh.NewSignerFromKey(pkey)
 	if err != nil {
 		return false, err
 	}

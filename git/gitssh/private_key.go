@@ -1,4 +1,4 @@
-package ssh
+package gitssh
 
 import (
 	"crypto/rand"
