@@ -2,6 +2,7 @@ package ssh_test
 
 import (
 	"crypto/rand"
+	"crypto/rsa"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -22,17 +23,9 @@ func TestReadPrivateRSAKey_ValidFile(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, pkey.Validate())
 
-	// Sign a message with obtained private key
-	msg := []byte("Test message")
-
-	signer, err := crypto_ssh.NewSignerFromKey(pkey)
+	ok, err := testValidRSAKeyPair(pkey, pubkey)
 	require.NoError(t, err)
-
-	signature, err := signer.Sign(rand.Reader, msg)
-	require.NoError(t, err)
-
-	// Verify the signature with a known public key
-	assert.NoError(t, pubkey.Verify(msg, signature))
+	assert.True(t, ok)
 }
 
 func TestReadPrivateRSAKey_NoFile(t *testing.T) {
@@ -72,6 +65,35 @@ func TestReadPrivateRSAKey_NotRSAKey(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestCreatePrivateRSAKey_GeneratesValidKey(t *testing.T) {
+	path, cleanup, err := mkTempFile()
+	require.NoError(t, err)
+	defer cleanup()
+
+	pkey, err := ssh.CreatePrivateRSAKey(path)
+	require.NoError(t, err)
+	require.NoError(t, pkey.Validate())
+}
+
+func TestCreatePrivateRSAKey_StoresReadableKey(t *testing.T) {
+	path, cleanup, err := mkTempFile()
+	require.NoError(t, err)
+	defer cleanup()
+
+	generatedPkey, err := ssh.CreatePrivateRSAKey(path)
+	require.NoError(t, err)
+
+	decodedPkey, err := ssh.ReadPrivateRSAKey(path)
+	require.NoError(t, err)
+
+	pubkey, err := crypto_ssh.NewPublicKey(&generatedPkey.PublicKey)
+	require.NoError(t, err)
+
+	ok, err := testValidRSAKeyPair(decodedPkey, pubkey)
+	require.NoError(t, err)
+	assert.True(t, ok)
+}
+
 func readTestPublicSSHKey(path string) (crypto_ssh.PublicKey, error) {
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -89,4 +111,21 @@ func mkTempFile() (path string, cleanupFn func(), err error) {
 	}
 
 	return fd.Name(), func() { os.Remove(fd.Name()) }, fd.Close()
+}
+
+// Sign a message given private key and check that the signature can be verified with provided public key.
+func testValidRSAKeyPair(pkey *rsa.PrivateKey, pubkey crypto_ssh.PublicKey) (bool, error) {
+	msg := []byte("Test message")
+
+	signer, err := crypto_ssh.NewSignerFromKey(pkey)
+	if err != nil {
+		return false, err
+	}
+
+	signature, err := signer.Sign(rand.Reader, msg)
+	if err != nil {
+		return false, err
+	}
+
+	return pubkey.Verify(msg, signature) == nil, nil
 }
