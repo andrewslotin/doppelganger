@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	sshKeySize       = 1024
+	sshKeySize       = 2048
 	pemRSAPKeyHeader = "RSA PRIVATE KEY"
 )
 
