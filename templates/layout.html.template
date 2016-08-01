@@ -42,10 +42,13 @@
       {{ block "content" . }}{{ end }}
     </div>
 
+    {{ with $version := "1.0.4" }}
     <footer class="footer">
       <div class="container">
-        <p class="text-muted text-center">Doppelganger 1.0.4</p>
+        <p class="text-muted text-center">Doppelganger {{ $version }}</p>
       </div>
     </footer>
+    {{ end }}
   </body>
 </html>
+
