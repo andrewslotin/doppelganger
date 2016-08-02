@@ -17,12 +17,14 @@ var (
 // Doppelganger uses ReposHandler to display both GitHub and local repositories.
 type ReposHandler struct {
 	repositories git.RepositoryService
+	mirrors      bool
 }
 
 // NewReposHandler creates and initializes a new handler.
-func NewReposHandler(repositoryService git.RepositoryService) *ReposHandler {
+func NewReposHandler(repositoryService git.RepositoryService, mirrors bool) *ReposHandler {
 	return &ReposHandler{
 		repositories: repositoryService,
+		mirrors:      mirrors,
 	}
 }
 

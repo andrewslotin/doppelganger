@@ -73,9 +73,9 @@ func main() {
 	}))
 
 	mux.Get("/:owner/:repo", NewRepoHandler(mirroredRepositoryService))
-	mux.Get("/", NewReposHandler(mirroredRepositoryService))
+	mux.Get("/", NewReposHandler(mirroredRepositoryService, true))
 	mux.Get("/src/:owner/:repo", NewRepoHandler(repositoryService))
-	mux.Get("/src/", NewReposHandler(repositoryService))
+	mux.Get("/src/", NewReposHandler(repositoryService, false))
 	mux.Post("/mirror", NewMirrorHandler(repositoryService, mirroredRepositoryService, repositoryService))
 	mux.Get("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 
