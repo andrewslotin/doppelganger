@@ -38,7 +38,11 @@ func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if err := reposTemplate.Execute(w, repos); err != nil {
+	values := struct {
+		Repositories []*git.Repository
+		Mirrors      bool
+	}{repos, handler.mirrors}
+	if err := reposTemplate.Execute(w, values); err != nil {
 		log.Printf("failed to render repos/index with %d entries (%s)", len(repos), err)
 		WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 	} else {
