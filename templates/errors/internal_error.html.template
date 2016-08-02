@@ -15,7 +15,7 @@
         {{ if .BackURL }}
           <li role="presentation"><a href="/{{ .BackURL }}">Go back</a></li>
         {{ end }}
-        <li role="presentation"><a href="/">GitHub repositories list</a></li>
+        <li role="presentation"><a href="/src/">GitHub repositories list</a></li>
       </ul>
     </div>
   </div>

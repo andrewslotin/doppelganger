@@ -14,7 +14,7 @@
       <ul class="nav nav-pills">
         <li role="presentation"><a href="/{{ .FullName }}">Source repository</a></li>
         <li role="presentation" class="active"><a href="/mirror/{{ .FullName }}">Mirrored copy</a></li>
-        <li role="presentation"><a href="/">Back to GitHub repositories list</a></li>
+        <li role="presentation"><a href="/src/">GitHub repositories list</a></li>
       </ul>
     </div>
   </div>

@@ -24,7 +24,7 @@
         <li role="presentation"><a href="/mirror/{{ .FullName }}">Mirrored copy</a></li>
         <li role="presentation"><a href="{{ .HTMLURL }}">View on GitHub</a></li>
         {{ end }}
-        <li role="presentation"><a href="/">Back to GitHub repositories list</a></li>
+        <li role="presentation"><a href="/src/">GitHub repositories list</a></li>
       </ul>
     </div>
   </div>
