@@ -16,6 +16,10 @@ body {
     background-color: #ffffff;
 }
 
+.nav.nav-pills {
+    margin-bottom: 1.5em;
+}
+
 #repositories-list .list-group-item {
     margin-top: 0.5em;
     border: none;
