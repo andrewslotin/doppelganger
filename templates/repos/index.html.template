@@ -23,16 +23,27 @@
   
   <div class="row">
     <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      {{ if .Repositories }}
       <div id="repositories-list" class="list-group">
         {{ range .Repositories }}
-          <a href="/{{ .FullName }}" class="list-group-item">
+        <a href="/{{ .FullName }}" class="list-group-item">
           <h4>{{ .FullName }}</h4>
-            {{ if .Description }}<p class="list-group-item-text">{{ .Description }}</p>{{ end }}
-          </a>
-        {{ else }}
-          <div class="well">No repositories found.</div>
+          {{ if .Description }}<p class="list-group-item-text">{{ .Description }}</p>{{ end }}
+        </a>
         {{ end }}
-      </dl>
+      </div>
+      {{ else }}
+      <div class="jumbotron">
+        <h3>No repositories found</h3>
+        <p>
+          {{ if .Mirrors }}
+          To establish a mirror go to your <a href="/src/">GitHub repositories list</a> and pick one.
+          {{ else }}
+          Check your GitHub token permissions. Consult <a href="https://github.com/andrewslotin/doppelganger/blob/master/README.md">Doppelganger README</a> for more detailed information.
+          {{ end }}
+        </p>
+      </div>
+      {{ end }}
     </div>
   </div>
 {{ end }}
