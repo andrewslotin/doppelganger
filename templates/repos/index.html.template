@@ -11,9 +11,9 @@
       <div id="repositories-list" class="list-group">
         {{ range . }}
           {{ if .Mirrored }}
-            <a href="/mirror/{{ .FullName }}" class="list-group-item">
-          {{ else }}
             <a href="/{{ .FullName }}" class="list-group-item">
+          {{ else }}
+            <a href="/src/{{ .FullName }}" class="list-group-item">
           {{ end }}
           <h4>{{ .FullName }}</h4>
             {{ if .Description }}<p class="list-group-item-text">{{ .Description }}</p>{{ end }}

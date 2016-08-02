@@ -72,9 +72,9 @@ func main() {
 		http.ServeFile(w, r, "./assets/favicon.ico")
 	}))
 
-	mux.Get("/:owner/:repo", NewRepoHandler(repositoryService))
+	mux.Get("/:owner/:repo", NewRepoHandler(mirroredRepositoryService))
 	mux.Get("/", NewReposHandler(mirroredRepositoryService))
-	mux.Get("/mirror/:owner/:repo", NewRepoHandler(mirroredRepositoryService))
+	mux.Get("/src/:owner/:repo", NewRepoHandler(repositoryService))
 	mux.Get("/src/", NewReposHandler(repositoryService))
 	mux.Post("/mirror", NewMirrorHandler(repositoryService, mirroredRepositoryService, repositoryService))
 	mux.Get("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))

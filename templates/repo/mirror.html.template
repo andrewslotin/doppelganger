@@ -12,8 +12,8 @@
   <div class="row">
     <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
       <ul class="nav nav-pills">
-        <li role="presentation"><a href="/{{ .FullName }}">Source repository</a></li>
-        <li role="presentation" class="active"><a href="/mirror/{{ .FullName }}">Mirrored copy</a></li>
+        <li role="presentation" class="active"><a href="/{{ .FullName }}">Mirrored copy</a></li>
+        <li role="presentation"><a href="/src/{{ .FullName }}">Source repository</a></li>
         <li role="presentation"><a href="/src/">GitHub repositories list</a></li>
       </ul>
     </div>
@@ -27,7 +27,7 @@
         GitHub repository <samp>{{ .FullName }}</samp> was not mirrored yet. After you click "Proceed" a bare copy will be created within the mirror directory.
       </p>
       <p>
-        You can always synchronize your mirrored copy by clicking "Sync" button at <a href="/mirror/{{ .FullName }}">mirrored copy page</a>. Besides that a GitHub webhook will be created and every time you push to the default branch (usually <samp>master</samp>) the copy will be updated as well. You might want to configure your reverse proxy to restrict access to <code>/apihook</code> from GitHub IPs only.
+        You can always synchronize your mirrored copy by clicking "Sync" button at <a href="/{{ .FullName }}">mirrored copy page</a>. Besides that a GitHub webhook will be created and every time you push to the default branch (usually <samp>master</samp>) the copy will be updated as well. You might want to configure your reverse proxy to restrict access to <code>/apihook</code> from GitHub IPs only.
       </p>
       <div class="alert alert-info" role="alert">
         <strong>Note:</strong> any changes pushed to the mirror repository will be discarded next time the source repository is updated.
