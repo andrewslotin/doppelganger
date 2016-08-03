@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path"
 	"path/filepath"
 	"syscall"
 
@@ -22,6 +23,8 @@ var (
 	Version = "n/a"
 	// BuildDate is used in help message and set by Makefile
 	BuildDate = "n/a"
+	// PrivateKeyPath is a path to the SSH used by git+ssh
+	PrivateKeyPath = path.Join(os.Getenv("HOME"), ".ssh", "id_rsa")
 
 	args struct {
 		version   bool
