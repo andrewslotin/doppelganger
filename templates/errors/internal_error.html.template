@@ -12,9 +12,6 @@
   <div class="row">
     <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
       <ul class="nav nav-pills">
-        {{ if .BackURL }}
-          <li role="presentation"><a href="/{{ .BackURL }}">Go back</a></li>
-        {{ end }}
         <li role="presentation"><a href="/">Mirrored repositories</a></li>
         <li role="presentation"><a href="/src/">GitHub repositories</a></li>
       </ul>
@@ -45,5 +42,13 @@
         $(this).addClass("hidden");
       });
     </script>
+  {{ end }}
+
+  {{ if .BackURL }}
+    <div class="row">
+      <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+        <a class="btn btn-primary" href="{{ .BackURL }}">Go back</a>
+      </div>
+    </div>
   {{ end }}
 {{ end }}
