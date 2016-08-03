@@ -72,11 +72,11 @@ func main() {
 		http.ServeFile(w, r, "./assets/favicon.ico")
 	}))
 
-	mux.Get("/", NewReposHandler(repositoryService))
-	mux.Get("/:owner/:repo", NewRepoHandler(repositoryService))
-	mux.Get("/mirror", NewReposHandler(mirroredRepositoryService))
+	mux.Get("/:owner/:repo", NewRepoHandler(mirroredRepositoryService))
+	mux.Get("/", NewReposHandler(mirroredRepositoryService, true))
+	mux.Get("/src/:owner/:repo", NewRepoHandler(repositoryService))
+	mux.Get("/src/", NewReposHandler(repositoryService, false))
 	mux.Post("/mirror", NewMirrorHandler(repositoryService, mirroredRepositoryService, repositoryService))
-	mux.Get("/mirror/:owner/:repo", NewRepoHandler(mirroredRepositoryService))
 	mux.Get("/assets/", http.StripPrefix("/assets/", http.FileServer(http.Dir("./assets"))))
 
 	// GitHub webhooks

@@ -17,12 +17,14 @@ var (
 // Doppelganger uses ReposHandler to display both GitHub and local repositories.
 type ReposHandler struct {
 	repositories git.RepositoryService
+	mirrors      bool
 }
 
 // NewReposHandler creates and initializes a new handler.
-func NewReposHandler(repositoryService git.RepositoryService) *ReposHandler {
+func NewReposHandler(repositoryService git.RepositoryService, mirrors bool) *ReposHandler {
 	return &ReposHandler{
 		repositories: repositoryService,
+		mirrors:      mirrors,
 	}
 }
 
@@ -36,7 +38,11 @@ func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request)
 		return
 	}
 
-	if err := reposTemplate.Execute(w, repos); err != nil {
+	values := struct {
+		Repositories []*git.Repository
+		Mirrors      bool
+	}{repos, handler.mirrors}
+	if err := reposTemplate.Execute(w, values); err != nil {
 		log.Printf("failed to render repos/index with %d entries (%s)", len(repos), err)
 		WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 	} else {
