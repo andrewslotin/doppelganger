@@ -52,7 +52,12 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 				WriteNotFoundPage(w, fmt.Sprintf("No such GitHub repository: %s", repoName), "/src/")
 			} else {
 				log.Printf("failed to create mirror %s: %s", repoName, err)
-				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+				userErr := UserError{
+					Message:       "Internal server error",
+					BackURL:       req.Referer(),
+					OriginalError: err,
+				}
+				WriteErrorPage(w, userErr, http.StatusInternalServerError)
 			}
 
 			return
@@ -64,7 +69,12 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 					WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 				} else {
 					log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-					WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+					userErr := UserError{
+						Message:       "Failed to set up push web hook, please check logs for details",
+						BackURL:       req.Referer(),
+						OriginalError: err,
+					}
+					WriteErrorPage(w, userErr, http.StatusInternalServerError)
 				}
 
 				return
@@ -79,7 +89,12 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 				WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 			} else {
 				log.Printf("failed to update mirror %s: %s", repoName, err)
-				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+				userErr := UserError{
+					Message:       "Internal server error",
+					BackURL:       req.Referer(),
+					OriginalError: err,
+				}
+				WriteErrorPage(w, userErr, http.StatusInternalServerError)
 			}
 
 			return
@@ -98,7 +113,12 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 				WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 			} else {
 				log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-				WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+				userErr := UserError{
+					Message:       "Failed to set up push web hook, please check logs for details",
+					BackURL:       req.Referer(),
+					OriginalError: err,
+				}
+				WriteErrorPage(w, userErr, http.StatusInternalServerError)
 			}
 
 			return
