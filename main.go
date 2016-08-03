@@ -6,17 +6,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"golang.org/x/net/context"
 
 	"github.com/andrewslotin/doppelganger/git"
+	"github.com/andrewslotin/doppelganger/server"
 	"github.com/bmizerany/pat"
 )
 
 var (
-	// Version and BuildDate are used in help message and set by Makefile
-	Version   = "n/a"
+	// Version is used in help message and logs and set by Makefile
+	Version = "n/a"
+	// BuildDate is used in help message and set by Makefile
 	BuildDate = "n/a"
 
 	args struct {
@@ -82,9 +86,20 @@ func main() {
 	// GitHub webhooks
 	mux.Post("/apihook", NewWebhookHandler(mirroredRepositoryService))
 
-	addr := fmt.Sprintf("%s:%d", args.addr, args.port)
-	log.Printf("doppelganger is listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	srv := server.New(args.addr, args.port)
+	if err := srv.Run(mux); err != nil {
 		log.Panic(err)
+	}
+	log.Printf("doppelganger %s is listening on %s", Version, srv.Addr)
+
+	signals := make(chan os.Signal)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case <-signals:
+		log.Println("shutdown signal received, terminating...")
+		if err := srv.Shutdown(); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
