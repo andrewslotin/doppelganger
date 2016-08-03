@@ -20,13 +20,15 @@
 
   <div class="row">
     <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
-      <h3>Page not found</h3>
-      <p>{{ .Message }}</p>
-      {{ if .BackURL }}
-      <a href="{{ .BackURL }}">Go back</a>, double-check the query and try again.
-      {{ else }}
-      Click <kbd>Back</kbd> button in your browser, double-check the query and try again.
-      {{ end }}
+      <div class="jumbotron">
+        <h3>Page not found</h3>
+        <p>{{ .Message }}</p>
+        {{ if .BackURL }}
+        <a href="{{ .BackURL }}">Go back</a>, double-check the query and try again.
+        {{ else }}
+        Click "Back" button in your browser, double-check the query and try again.
+        {{ end }}
+      </div>
     </div>
   </div>
 {{ end }}
