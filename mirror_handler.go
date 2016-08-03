@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"log"
 	"net/http"
 	"net/url"
@@ -9,6 +10,11 @@ import (
 	"time"
 
 	"github.com/andrewslotin/doppelganger/git"
+	"github.com/andrewslotin/doppelganger/git/gitssh"
+)
+
+var (
+	privateRepoAccessTemplate = template.Must(template.ParseFiles("templates/layout.html.template", "templates/mirror/private_repo_access.html.template"))
 )
 
 // MirrorHandler is a type that implements http.Handler interface and is used to handle requests to "/mirror".
@@ -49,11 +55,22 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 	case "create":
 		if err := handler.CreateMirror(w, repoName); err != nil {
 			if err == git.ErrorNotFound {
-				WriteNotFoundPage(w, fmt.Sprintf("No such GitHub repository: %s", repoName), "/src/")
+				err = handler.ShowPrivateRepoAccessPage(w, repoName, action)
+				if err == nil {
+					return
+				}
+
+				log.Printf("failed to obtain public key: %s", err)
 			} else {
 				log.Printf("failed to create mirror %s: %s", repoName, err)
-				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
 			}
+
+			userErr := UserError{
+				Message:       "Internal server error",
+				BackURL:       req.Referer(),
+				OriginalError: err,
+			}
+			WriteErrorPage(w, userErr, http.StatusInternalServerError)
 
 			return
 		}
@@ -64,7 +81,12 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 					WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 				} else {
 					log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-					WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+					userErr := UserError{
+						Message:       "Failed to set up push web hook, please check logs for details",
+						BackURL:       req.Referer(),
+						OriginalError: err,
+					}
+					WriteErrorPage(w, userErr, http.StatusInternalServerError)
 				}
 
 				return
@@ -79,7 +101,12 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 				WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 			} else {
 				log.Printf("failed to update mirror %s: %s", repoName, err)
-				WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+				userErr := UserError{
+					Message:       "Internal server error",
+					BackURL:       req.Referer(),
+					OriginalError: err,
+				}
+				WriteErrorPage(w, userErr, http.StatusInternalServerError)
 			}
 
 			return
@@ -98,7 +125,12 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 				WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 			} else {
 				log.Printf("failed to track changes for mirror %s: %s", repoName, err)
-				WriteErrorPage(w, UserError{Message: "Failed to set up push web hook, please check logs for details", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)
+				userErr := UserError{
+					Message:       "Failed to set up push web hook, please check logs for details",
+					BackURL:       req.Referer(),
+					OriginalError: err,
+				}
+				WriteErrorPage(w, userErr, http.StatusInternalServerError)
 			}
 
 			return
@@ -139,6 +171,43 @@ func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName strin
 	}
 
 	return handler.mirroredRepos.Update(repo.FullName)
+}
+
+func (handler *MirrorHandler) ShowPrivateRepoAccessPage(w http.ResponseWriter, repoName, action string) error {
+	pubkey, err := handler.getPublicKey()
+	if err != nil {
+		return err
+	}
+
+	values := struct {
+		PublicKey string
+		FullName  string
+		Action    string
+	}{
+		PublicKey: string(pubkey),
+		FullName:  "andrewslotin/lol",
+		Action:    "create",
+	}
+
+	return privateRepoAccessTemplate.Execute(w, values)
+}
+
+func (handler *MirrorHandler) getPublicKey() ([]byte, error) {
+	pkey, err := gitssh.ReadPrivateRSAKey(PrivateKeyPath)
+	if err != nil {
+		log.Printf("writing a new RSA key to %s", PrivateKeyPath)
+		pkey, err = gitssh.CreatePrivateRSAKey(PrivateKeyPath)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	pubkey, err := gitssh.AuthorizedRSAKey(pkey)
+	if err != nil {
+		return nil, err
+	}
+
+	return pubkey, nil
 }
 
 func (handler *MirrorHandler) redirectToRepository(w http.ResponseWriter, req *http.Request, repoName string) {
