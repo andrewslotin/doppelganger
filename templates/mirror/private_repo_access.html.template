@@ -1,0 +1,56 @@
+{{ define "content" }}
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <div class="page-header">
+        <h1>Private Repository Access</h1>
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <ul class="nav nav-pills">
+        <li role="presentation" class="active"><a href="/{{ .FullName }}">Mirrored copy</a></li>
+        <li role="presentation"><a href="/src/{{ .FullName }}">Source repository</a></li>
+        <li role="presentation"><a href="/">Mirrored repositories</a></li>
+        <li role="presentation"><a href="/src/">GitHub repositories</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <h3 class="text-capitalize">Failed to access private repository</h3>
+      <p>Doppelganger failed to clone remote repository. This may happen if SSH key was not added to GitHub SSH keys list.</p>
+      <p>
+        Here is how to fix it:
+        <ol>
+          <li>Go to <a href="https://github.com/settings/keys" target="_blank">GitHub SSH and GPG Keys</a> page</li>
+          <li>Click "New SSH key"</li>
+          <li>Paste public key found below into "Key" field</li>
+          <li>Click "Add SSH key"</li>
+        </ol>
+        After all these steps are completed click "Proceed" button below.
+      </p>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <h5>Public key</h5>
+      <div class="well" style="word-wrap: break-word;">{{ .PublicKey }}</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
+      <form action="/mirror" method="POST">
+        <input name="action" type="hidden" value="{{ .Action }}"/>
+        <input name="repo" type="hidden" value="{{ .FullName }}">
+        <div class="input-group-btn">
+          <button type="submit" class="btn btn-primary">Proceed</button>
+        </div>
+      </form>
+    </div>
+  </div>
+{{ end }}
