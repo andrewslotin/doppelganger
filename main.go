@@ -6,7 +6,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 
 	"golang.org/x/net/context"
 
@@ -89,5 +91,14 @@ func main() {
 	}
 	log.Printf("doppelganger is listening on %s", srv.Addr)
 
-	select {}
+	signals := make(chan os.Signal)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case <-signals:
+		log.Println("shutdown signal received, terminating...")
+		if err := srv.Shutdown(); err != nil {
+			log.Fatal(err)
+		}
+	}
 }
