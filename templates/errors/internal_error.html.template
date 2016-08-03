@@ -15,7 +15,8 @@
         {{ if .BackURL }}
           <li role="presentation"><a href="/{{ .BackURL }}">Go back</a></li>
         {{ end }}
-        <li role="presentation"><a href="/src/">GitHub repositories list</a></li>
+        <li role="presentation"><a href="/">Mirrored repositories</a></li>
+        <li role="presentation"><a href="/src/">GitHub repositories</a></li>
       </ul>
     </div>
   </div>

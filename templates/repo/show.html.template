@@ -24,7 +24,8 @@
         <li role="presentation" class="active"><a href="/src/{{ .FullName }}">Source repository</a></li>
         <li role="presentation"><a href="{{ .HTMLURL }}">View on GitHub</a></li>
         {{ end }}
-        <li role="presentation"><a href="/src/">GitHub repositories list</a></li>
+        <li role="presentation"><a href="/">Mirrored repositories</a></li>
+        <li role="presentation"><a href="/src/">GitHub repositories</a></li>
       </ul>
     </div>
   </div>
