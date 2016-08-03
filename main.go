@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/context"
 
 	"github.com/andrewslotin/doppelganger/git"
+	"github.com/andrewslotin/doppelganger/server"
 	"github.com/bmizerany/pat"
 )
 
@@ -82,9 +83,11 @@ func main() {
 	// GitHub webhooks
 	mux.Post("/apihook", NewWebhookHandler(mirroredRepositoryService))
 
-	addr := fmt.Sprintf("%s:%d", args.addr, args.port)
-	log.Printf("doppelganger is listening on %s", addr)
-	if err := http.ListenAndServe(addr, mux); err != nil {
+	srv := server.New(args.addr, args.port)
+	if err := srv.Run(mux); err != nil {
 		log.Panic(err)
 	}
+	log.Printf("doppelganger is listening on %s", srv.Addr)
+
+	select {}
 }
