@@ -18,8 +18,9 @@ import (
 )
 
 var (
-	// Version and BuildDate are used in help message and set by Makefile
-	Version   = "n/a"
+	// Version is used in help message and logs and set by Makefile
+	Version = "n/a"
+	// BuildDate is used in help message and set by Makefile
 	BuildDate = "n/a"
 
 	args struct {
@@ -89,7 +90,7 @@ func main() {
 	if err := srv.Run(mux); err != nil {
 		log.Panic(err)
 	}
-	log.Printf("doppelganger is listening on %s", srv.Addr)
+	log.Printf("doppelganger %s is listening on %s", Version, srv.Addr)
 
 	signals := make(chan os.Signal)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
