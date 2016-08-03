@@ -20,6 +20,10 @@ body {
     margin-bottom: 1.5em;
 }
 
+.jumbotron .buttons {
+    margin-top: 2em;
+}
+
 #repositories-list .list-group-item {
     margin-top: 0.5em;
     border: none;
