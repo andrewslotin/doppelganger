@@ -197,7 +197,7 @@ func TestGithubRepositoriesAll_HandlePagination(t *testing.T) {
 	assert.Len(t, repos, 2)
 }
 
-func TestGithubRepositoriesGet_RepositoryExists(t *testing.T) {
+func TestGithubRepositoriesGet_RepositoryExists_PublicRepo(t *testing.T) {
 	ctx, mux, teardown := setup()
 	defer teardown()
 
@@ -208,8 +208,10 @@ func TestGithubRepositoriesGet_RepositoryExists(t *testing.T) {
 		    "description":
 		    "Test repo",
 		    "default_branch":"production",
-		    "ssh_url":"git:git@github.com:user1/repo1.git",
-		    "html_url": "https://github.com/user1/repo1"
+		    "ssh_url":"git@github.com:user1/repo1.git",
+		    "git_url":"git:github.com/user1/repo1.git",
+		    "html_url": "https://github.com/user1/repo1",
+		    "private": false
 		}`)
 	})
 	// Get branch
@@ -233,7 +235,48 @@ func TestGithubRepositoriesGet_RepositoryExists(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.Equal(t, repo.FullName, "user1/repo1")
-	assert.Equal(t, repo.GitURL, "git:git@github.com:user1/repo1.git")
+	assert.Equal(t, repo.GitURL, "git:github.com/user1/repo1.git")
+}
+
+func TestGithubRepositoriesGet_RepositoryExists_PrivateRepo(t *testing.T) {
+	ctx, mux, teardown := setup()
+	defer teardown()
+
+	// Get repo
+	mux.HandleFunc("/repos/user1/repo1", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{
+		    "full_name": "user1/repo1",
+		    "description":
+		    "Test repo",
+		    "default_branch":"production",
+		    "ssh_url":"git@github.com:user1/repo1.git",
+		    "git_url":"git:github.com/user1/repo1.git",
+		    "html_url": "https://github.com/user1/repo1",
+		    "private": true
+		}`)
+	})
+	// Get branch
+	mux.HandleFunc("/repos/user1/repo1/branches/production", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{"name":"production","commit":{"sha":"abc123"}}`)
+	})
+	// Get git commit
+	mux.HandleFunc("/repos/user1/repo1/git/commits/abc123", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprint(w, `{
+		    "author":{"name":"Jon Doe","date":"2011-04-14T16:00:49Z"},
+		    "committer":{"name":"Doppel Ganger","date":"2016-04-14T16:00:00Z"},
+		    "message":"Commit message",
+		    "sha":"abc123"
+		}`)
+	})
+
+	githubRepos, err := git.NewGithubRepositories(ctx)
+	require.NoError(t, err)
+
+	repo, err := githubRepos.Get("user1/repo1")
+	require.NoError(t, err)
+
+	assert.Equal(t, repo.FullName, "user1/repo1")
+	assert.Equal(t, repo.GitURL, "git@github.com:user1/repo1.git")
 }
 
 func TestGithubRepositoriesGet_NotFound(t *testing.T) {
