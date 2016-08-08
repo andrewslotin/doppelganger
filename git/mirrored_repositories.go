@@ -2,7 +2,10 @@ package git
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"path/filepath"
 )
 
@@ -49,7 +52,16 @@ func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
 
 // Create creates a local mirror of remote repository from gitURL by calling "git --mirror <gitURL> <fullName>".
 func (service *MirroredRepositories) Create(fullName, gitURL string) error {
-	return service.cmd.CloneMirror(gitURL, service.resolveMirrorPath(fullName))
+	fullPath := service.resolveMirrorPath(fullName)
+
+	if _, err := os.Stat(fullPath); err == nil {
+		log.Printf("[WARN] %s already exists, removing", fullPath)
+		if err := os.RemoveAll(fullPath); err != nil {
+			return fmt.Errorf("failed to remove an existing file/directory %s: %s", fullPath, err)
+		}
+	}
+
+	return service.cmd.CloneMirror(gitURL, fullPath)
 }
 
 // Update downloads latest changes from remote repository into a local mirror discarding any changes that were pushed

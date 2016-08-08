@@ -149,6 +149,23 @@ func TestMirroredRepositories_Create(t *testing.T) {
 	cmd.AssertExpectations(t)
 }
 
+func TestMirroredRepositories_Create_DirExists(t *testing.T) {
+	mirrorsDir, teardown, err := setupMirrorsDir()
+	require.NoError(t, err)
+	defer teardown()
+
+	mirroredRepoPath := path.Join(mirrorsDir, "a", "b")
+	require.NoError(t, os.MkdirAll(mirroredRepoPath, 0755))
+
+	cmd := &commandMock{}
+	cmd.On("CloneMirror", "git@doppelganger:a/b", mirroredRepoPath).Return(nil)
+
+	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
+	require.NoError(t, mirroredRepos.Create("a/b", "git@doppelganger:a/b"))
+
+	cmd.AssertExpectations(t)
+}
+
 func TestMirroredRepositories_Update(t *testing.T) {
 	mirrorsDir, teardown, err := setupMirrorsDir()
 	require.NoError(t, err)
