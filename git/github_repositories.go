@@ -221,13 +221,20 @@ func ParseRepositoryName(fullName string) (string, string) {
 }
 
 func repositoryFromGithub(githubRepo *api.Repository) *Repository {
-	return &Repository{
+	repo := &Repository{
 		FullName:    *githubRepo.FullName,
 		Description: *githubRepo.Description,
 		Master:      *githubRepo.DefaultBranch,
 		HTMLURL:     *githubRepo.HTMLURL,
-		GitURL:      *githubRepo.SSHURL,
+		GitURL:      *githubRepo.GitURL,
 	}
+
+	// Use git+ssh to clone private repos
+	if githubRepo.Private != nil && *githubRepo.Private {
+		repo.GitURL = *githubRepo.SSHURL
+	}
+
+	return repo
 }
 
 func commitFromGithub(githubCommit *api.Commit) *Commit {
