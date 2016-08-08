@@ -3,6 +3,7 @@ package git_test
 import (
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 	"time"
@@ -12,6 +13,8 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+/* ************ Tests objects ************ */
 
 type commandMock struct {
 	mock.Mock
@@ -48,10 +51,12 @@ func (cmd *commandMock) UpdateRemote(fullPath string) error {
 	return args.Error(0)
 }
 
-func TestMirroredRepositoriesAll(t *testing.T) {
-	mirrorPath, err := ioutil.TempDir("", "mirroredReposXXX")
+/* **************** Tests **************** */
+
+func TestMirroredRepositories_All(t *testing.T) {
+	mirrorsDir, teardown, err := setupMirrorsDir()
 	require.NoError(t, err)
-	defer os.RemoveAll(mirrorPath)
+	defer teardown()
 
 	reposWithBranches := map[string]string{
 		"a":      "staging",
@@ -62,19 +67,19 @@ func TestMirroredRepositoriesAll(t *testing.T) {
 
 	cmd := &commandMock{}
 
-	cmd.On("IsRepository", mirrorPath).Return(false)
-	cmd.On("IsRepository", filepath.Join(mirrorPath, "b")).Return(false)
-	cmd.On("IsRepository", filepath.Join(mirrorPath, "b/b2")).Return(false)
+	cmd.On("IsRepository", mirrorsDir).Return(false)
+	cmd.On("IsRepository", filepath.Join(mirrorsDir, "b")).Return(false)
+	cmd.On("IsRepository", filepath.Join(mirrorsDir, "b/b2")).Return(false)
 
 	for repoName, masterBranch := range reposWithBranches {
-		path := filepath.Join(mirrorPath, repoName)
+		path := filepath.Join(mirrorsDir, repoName)
 		os.MkdirAll(path, 0755)
 
 		cmd.On("IsRepository", path).Return(true)
 		cmd.On("CurrentBranch", path).Return(masterBranch)
 	}
 
-	mirroredRepos := git.NewMirroredRepositories(mirrorPath, cmd)
+	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
 	mirrors, err := mirroredRepos.All()
 	require.NoError(t, err)
 	cmd.AssertExpectations(t)
@@ -86,13 +91,19 @@ func TestMirroredRepositoriesAll(t *testing.T) {
 	}
 }
 
-func TestMirroredRepositoriesGet_MirrorExists(t *testing.T) {
-	cmd := &commandMock{}
-	cmd.On("IsRepository", "mirrors/a/b").Return(true)
-	cmd.On("CurrentBranch", "mirrors/a/b").Return("production")
-	cmd.On("LastCommit", "mirrors/a/b").Return("abc123", "Jon Doe", "HI MOM", "2016-04-23 16:12:39", nil)
+func TestMirroredRepositories_Get_MirrorExists(t *testing.T) {
+	mirrorsDir, teardown, err := setupMirrorsDir()
+	require.NoError(t, err)
+	defer teardown()
 
-	mirroredRepos := git.NewMirroredRepositories("mirrors", cmd)
+	cmd := &commandMock{}
+
+	mirroredRepoPath := path.Join(mirrorsDir, "a", "b")
+	cmd.On("IsRepository", mirroredRepoPath).Return(true)
+	cmd.On("CurrentBranch", mirroredRepoPath).Return("production")
+	cmd.On("LastCommit", mirroredRepoPath).Return("abc123", "Jon Doe", "HI MOM", "2016-04-23 16:12:39", nil)
+
+	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
 	repo, err := mirroredRepos.Get("a/b")
 	require.NoError(t, err)
 
@@ -109,33 +120,54 @@ func TestMirroredRepositoriesGet_MirrorExists(t *testing.T) {
 	}
 }
 
-func TestMirroredRepositoriesGet_NotMirrored(t *testing.T) {
-	cmd := &commandMock{}
-	cmd.On("IsRepository", "mirrors/a/b").Return(false)
+func TestMirroredRepositories_Get_NotMirrored(t *testing.T) {
+	mirrorsDir, teardown, err := setupMirrorsDir()
+	require.NoError(t, err)
+	defer teardown()
 
-	mirroredRepos := git.NewMirroredRepositories("mirrors", cmd)
-	_, err := mirroredRepos.Get("a/b")
+	cmd := &commandMock{}
+	cmd.On("IsRepository", path.Join(mirrorsDir, "a", "b")).Return(false)
+
+	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
+	_, err = mirroredRepos.Get("a/b")
 
 	cmd.AssertExpectations(t)
 	assert.Equal(t, err, git.ErrorNotMirrored)
 }
 
-func TestMirroredRepositoriesCreate(t *testing.T) {
-	cmd := &commandMock{}
-	cmd.On("CloneMirror", "git@doppelganger:a/b", "mirrors/a/b").Return(nil)
+func TestMirroredRepositories_Create(t *testing.T) {
+	mirrorsDir, teardown, err := setupMirrorsDir()
+	require.NoError(t, err)
+	defer teardown()
 
-	mirroredRepos := git.NewMirroredRepositories("mirrors", cmd)
+	cmd := &commandMock{}
+	cmd.On("CloneMirror", "git@doppelganger:a/b", path.Join(mirrorsDir, "a", "b")).Return(nil)
+
+	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
 	require.NoError(t, mirroredRepos.Create("a/b", "git@doppelganger:a/b"))
 
 	cmd.AssertExpectations(t)
 }
 
-func TestMirroredRepositoriesUpdate(t *testing.T) {
-	cmd := &commandMock{}
-	cmd.On("UpdateRemote", "mirrors/a/b").Return(nil)
+func TestMirroredRepositories_Update(t *testing.T) {
+	mirrorsDir, teardown, err := setupMirrorsDir()
+	require.NoError(t, err)
+	defer teardown()
 
-	mirroredRepos := git.NewMirroredRepositories("mirrors", cmd)
+	cmd := &commandMock{}
+	cmd.On("UpdateRemote", path.Join(mirrorsDir, "a", "b")).Return(nil)
+
+	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
 	require.NoError(t, mirroredRepos.Update("a/b"))
 
 	cmd.AssertExpectations(t)
+}
+
+func setupMirrorsDir() (mirrorsPath string, teardownFn func(), err error) {
+	tmpDir, err := ioutil.TempDir(os.TempDir(), "doppelganger")
+	if err != nil {
+		return "", nil, err
+	}
+
+	return tmpDir, func() { os.RemoveAll(tmpDir) }, nil
 }
