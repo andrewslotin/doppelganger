@@ -20,7 +20,10 @@ const (
 	gitDateFormat   = "format:%FT%T%z"
 )
 
-var gitPrettyFormatFieldsNum = strings.Count(gitPrettyFormat, "\n") + 1
+var (
+	gitPrettyFormatFieldsNum = strings.Count(gitPrettyFormat, "\n") + 1
+	errUnexpectedExit        = errors.New("unexpected exit")
+)
 
 type systemGit string
 
@@ -41,10 +44,16 @@ func (gitCmd systemGit) Exec(path, command string, args ...string) (output []byt
 	cmd := exec.Command(string(gitCmd), append([]string{command}, args...)...)
 	cmd.Dir = path
 
-	output, err = cmd.CombinedOutput()
-	output = bytes.TrimSpace(output)
+	output, err = cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			return nil, errors.New(string(exitErr.Stderr))
+		} else {
+			return nil, errUnexpectedExit
+		}
+	}
 
-	return output, err
+	return bytes.TrimSpace(output), nil
 }
 
 // IsRepository checks if there if `path` is a git repository.
@@ -62,7 +71,7 @@ func (gitCmd systemGit) IsRepository(path string) bool {
 
 	output, err := gitCmd.Exec(path, "rev-parse", "--is-inside-git-dir")
 	if err != nil {
-		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned error %s for %s (%s)", err, path, string(output))
+		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned %s for %s (%s)", err, path, string(output))
 		return false
 	}
 
@@ -81,7 +90,7 @@ func (gitCmd systemGit) IsRepository(path string) bool {
 func (gitCmd systemGit) CurrentBranch(path string) string {
 	refName, err := gitCmd.Exec(path, "symbolic-ref", "HEAD")
 	if err != nil {
-		log.Printf("[WARN] git symbolic-ref HEAD returned error %s for %s (%s)", err, path, string(refName))
+		log.Printf("[WARN] git symbolic-ref HEAD returned %s for %s (%s)", err, path, string(refName))
 		return DefaultMaster
 	}
 
@@ -139,7 +148,7 @@ func (gitCmd systemGit) CloneMirror(gitURL, path string) error {
 func (gitCmd systemGit) UpdateRemote(path string) error {
 	output, err := gitCmd.Exec(path, "remote", "update")
 	if err != nil {
-		log.Printf("[WARN] git remote update returned error %s for %s (%s)", err, path, string(output))
+		log.Printf("[WARN] git remote update returned %s for %s (%s)", err, path, string(output))
 		return errors.New("update failed")
 	}
 
