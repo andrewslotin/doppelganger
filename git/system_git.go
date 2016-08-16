@@ -70,8 +70,9 @@ func (gitCmd systemGit) IsRepository(path string) bool {
 	}
 
 	output, err := gitCmd.Exec(path, "rev-parse", "--is-inside-git-dir")
-	if err != nil {
+	if err == errUnexpectedExit {
 		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned %s for %s (%s)", err, path, string(output))
+	} else if err != nil {
 		return false
 	}
 
