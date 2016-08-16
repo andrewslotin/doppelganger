@@ -84,9 +84,8 @@ git branch --set-upstream master origin/master
 Mirroring Private Repositories
 ------------------------------
 
-To mirror private repositories your personal access token should have `repo` permission. To clone repositories you need to put into your 
-container a private SSH key that was added to your GitHub account. It might be a good idea to use a separate key for Doppelganger.
+To mirror private repositories your personal access token should have `repo` permission.
 
-```bash
-docker cp ~/.ssh/doppelganger_dsa doppelganger:/root/.ssh/id_dsa
-```
+Doppelganger uses `git+ssh` protocol to clone private repositories, which requires an SSH key to be present in the system.
+While attempting to clone a private repository Doppelganger will try to use an existing key stored in `~/.ssh`. If there
+is no key it will attempt generate a new 2048-bit RSA key pair and offer to add the public key to the list of [your GitHub SSH keys](https://github.com/settings/keys).
