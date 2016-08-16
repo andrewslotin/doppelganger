@@ -16,7 +16,7 @@ const (
 	// GitCommandDateLayout corresponds to `git log --date=format:%FT%T%z` date format.
 	GitCommandDateLayout = "2006-01-02T15:04:05-0700"
 
-	gitPrettyFormat = "%H\n%cn\n%cd\n%s"
+	gitPrettyFormat = "%H\n%an\n%cn\n%cd\n%s"
 	gitDateFormat   = "format:%FT%T%z"
 )
 
@@ -107,10 +107,10 @@ func (gitCmd systemGit) LastCommit(path string) (commit Commit, err error) {
 		return commit, nil
 	}
 
-	commit.SHA, commit.Author, commit.Message = lines[0], lines[1], lines[3]
-	commit.Date, err = time.Parse(GitCommandDateLayout, lines[2])
+	commit.SHA, commit.Author, commit.Committer, commit.Message = lines[0], lines[1], lines[2], lines[4]
+	commit.Date, err = time.Parse(GitCommandDateLayout, lines[3])
 	if err != nil {
-		log.Printf("[WARN] unexpected date format from git log for %s (%s)", path, lines[2])
+		log.Printf("[WARN] unexpected date format from git log for %s (%s)", path, lines[3])
 		commit.Date = time.Time{}
 	}
 

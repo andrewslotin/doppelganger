@@ -65,7 +65,13 @@ func TestMirroredRepositories_All(t *testing.T) {
 	cmd.On("IsRepository", filepath.Join(mirrorsDir, "b")).Return(false)
 	cmd.On("IsRepository", filepath.Join(mirrorsDir, "b/b2")).Return(false)
 
-	lastCommit := git.Commit{SHA: "abc123", Author: "Jon Doe", Message: "HI MOM", Date: time.Now().UTC().Truncate(time.Second).Add(-10 * time.Hour)}
+	lastCommit := git.Commit{
+		SHA:       "abc123",
+		Author:    "Jon Doe",
+		Committer: "Doppel Ganger",
+		Message:   "HI MOM",
+		Date:      time.Now().UTC().Truncate(time.Second).Add(-10 * time.Hour),
+	}
 	for repoName, masterBranch := range reposWithBranches {
 		path := filepath.Join(mirrorsDir, repoName)
 		os.MkdirAll(path, 0755)
@@ -86,6 +92,7 @@ func TestMirroredRepositories_All(t *testing.T) {
 			if assert.NotNil(t, repo.LatestMasterCommit) {
 				assert.Equal(t, lastCommit.SHA, repo.LatestMasterCommit.SHA)
 				assert.Equal(t, lastCommit.Author, repo.LatestMasterCommit.Author)
+				assert.Equal(t, lastCommit.Committer, repo.LatestMasterCommit.Committer)
 				assert.Equal(t, lastCommit.Message, repo.LatestMasterCommit.Message)
 				assert.True(t, repo.LatestMasterCommit.Date.Equal(lastCommit.Date))
 			}
@@ -102,10 +109,11 @@ func TestMirroredRepositories_Get_MirrorExists(t *testing.T) {
 
 	mirroredRepoPath := path.Join(mirrorsDir, "a", "b")
 	lastCommit := git.Commit{
-		SHA:     "abc123",
-		Author:  "Jon Doe",
-		Message: "HI MOM",
-		Date:    time.Now().Add(-5 * time.Minute).Truncate(time.Second),
+		SHA:       "abc123",
+		Author:    "Jon Doe",
+		Committer: "Doppel Ganger",
+		Message:   "HI MOM",
+		Date:      time.Now().Add(-5 * time.Minute).Truncate(time.Second),
 	}
 
 	cmd.On("IsRepository", mirroredRepoPath).Return(true)
@@ -123,6 +131,7 @@ func TestMirroredRepositories_Get_MirrorExists(t *testing.T) {
 		if commit := repo.LatestMasterCommit; assert.NotNil(t, commit) {
 			assert.Equal(t, lastCommit.SHA, commit.SHA)
 			assert.Equal(t, lastCommit.Author, commit.Author)
+			assert.Equal(t, lastCommit.Committer, commit.Committer)
 			assert.Equal(t, lastCommit.Message, commit.Message)
 			assert.True(t, commit.Date.Equal(lastCommit.Date), "Expected %s, got %s", lastCommit.Date, commit.Date)
 		}
