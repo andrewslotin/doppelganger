@@ -88,13 +88,15 @@ func (gitCmd systemGit) LastCommit(fullPath string) (rev, author, message string
 		return "", "", "", time.Time{}, nil
 	}
 
+	log.Println(string(output))
+
 	lines := strings.SplitN(string(output), "\n", 4)
 	if len(lines) < 4 {
 		log.Printf("[WARN] unexpected output from git log for %s (%s)", fullPath, string(output))
 		return "", "", "", time.Time{}, nil
 	}
 
-	rev, author, message = lines[0], lines[1], lines[2]
+	rev, author, message = lines[0], lines[1], lines[3]
 
 	createdAt, err = time.Parse("2006-01-02T15:04:05Z0700", lines[2])
 	if err != nil {
