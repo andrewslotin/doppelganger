@@ -12,8 +12,15 @@ import (
 	"time"
 )
 
-// GitCommandDateLayout corresponds to `git log --date=format:%FT%T%z` date format.
-const GitCommandDateLayout = "2006-01-02T15:04:05-0700"
+const (
+	// GitCommandDateLayout corresponds to `git log --date=format:%FT%T%z` date format.
+	GitCommandDateLayout = "2006-01-02T15:04:05-0700"
+
+	gitPrettyFormat = "%H\n%cn\n%cd\n%s"
+	gitDateFormat   = "format:%FT%T%z"
+)
+
+var gitPrettyFormatFieldsNum = strings.Count(gitPrettyFormat, "\n") + 1
 
 type systemGit string
 
@@ -85,14 +92,14 @@ func (gitCmd systemGit) CurrentBranch(fullPath string) string {
 }
 
 func (gitCmd systemGit) LastCommit(fullPath string) (commit Commit, err error) {
-	output, err := gitCmd.Exec(fullPath, "log", "-n", "1", "--pretty=%H\n%cn\n%cd\n%s", "--date=format:%FT%T%z")
+	output, err := gitCmd.Exec(fullPath, "log", "-n", "1", "--pretty="+gitPrettyFormat, "--date="+gitDateFormat)
 	if err != nil {
 		log.Printf("[WARN] git log returned error %s for %s (%s)", err, fullPath, string(output))
 		return commit, nil
 	}
 
-	lines := strings.SplitN(string(output), "\n", 4)
-	if len(lines) < 4 {
+	lines := strings.SplitN(string(output), "\n", gitPrettyFormatFieldsNum)
+	if len(lines) < gitPrettyFormatFieldsNum {
 		log.Printf("[WARN] unexpected output from git log for %s (%s)", fullPath, string(output))
 		return commit, nil
 	}
