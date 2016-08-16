@@ -239,9 +239,10 @@ func repositoryFromGithub(githubRepo *api.Repository) *Repository {
 
 func commitFromGithub(githubCommit *api.Commit) *Commit {
 	return &Commit{
-		SHA:     *githubCommit.SHA,
-		Message: *githubCommit.Message,
-		Author:  *githubCommit.Committer.Name,
-		Date:    *githubCommit.Committer.Date,
+		SHA:       *githubCommit.SHA,
+		Message:   *githubCommit.Message,
+		Author:    *githubCommit.Author.Name,
+		Committer: *githubCommit.Committer.Name,
+		Date:      *githubCommit.Committer.Date,
 	}
 }

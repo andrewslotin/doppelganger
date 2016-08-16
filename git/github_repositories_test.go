@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"github.com/andrewslotin/doppelganger/git"
 	"github.com/andrewslotin/doppelganger/git/internal"
@@ -68,6 +69,7 @@ func TestGithubRepositoriesAll_SingleRepository_DefaultFields(t *testing.T) {
 		assert.Empty(t, repo.Description)
 		assert.Empty(t, repo.GitURL)
 		assert.Empty(t, repo.HTMLURL)
+		assert.Nil(t, repo.LatestMasterCommit)
 	}
 }
 
@@ -97,6 +99,7 @@ func TestGithubRepositoriesAll_SingleRepository_AllFields(t *testing.T) {
 		assert.Equal(t, repo.Description, "Repo1")
 		assert.Equal(t, repo.Master, "production")
 		assert.Empty(t, repo.GitURL)
+		assert.Nil(t, repo.LatestMasterCommit)
 	}
 }
 
@@ -236,6 +239,18 @@ func TestGithubRepositoriesGet_RepositoryExists_PublicRepo(t *testing.T) {
 
 	assert.Equal(t, repo.FullName, "user1/repo1")
 	assert.Equal(t, repo.GitURL, "git:github.com/user1/repo1.git")
+	if commit := repo.LatestMasterCommit; assert.NotNil(t, commit) {
+		assert.Equal(t, commit.SHA, "abc123")
+		assert.Equal(t, commit.Author, "Jon Doe")
+		assert.Equal(t, commit.Committer, "Doppel Ganger")
+		assert.Equal(t, commit.Message, "Commit message")
+		assert.True(t,
+			commit.Date.Equal(time.Date(2016, 4, 14, 16, 0, 0, 0, time.UTC)),
+			"committer.date: %q, got %s",
+			"2016-04-14T16:00:00Z",
+			commit.Date,
+		)
+	}
 }
 
 func TestGithubRepositoriesGet_RepositoryExists_PrivateRepo(t *testing.T) {
