@@ -98,8 +98,9 @@ func (service *MirroredRepositories) findGitRepos(path string) ([]*Repository, e
 
 func (service *MirroredRepositories) repositoryFromDir(path string) *Repository {
 	return &Repository{
-		FullName: path,
-		Master:   service.cmd.CurrentBranch(service.resolveMirrorPath(path)),
+		FullName:           path,
+		Master:             service.cmd.CurrentBranch(service.resolveMirrorPath(path)),
+		LatestMasterCommit: service.commitFromDir(path),
 	}
 }
 
