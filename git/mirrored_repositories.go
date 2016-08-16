@@ -105,17 +105,12 @@ func (service *MirroredRepositories) repositoryFromDir(path string) *Repository 
 }
 
 func (service *MirroredRepositories) commitFromDir(path string) *Commit {
-	rev, author, message, createdAt, err := service.cmd.LastCommit(service.resolveMirrorPath(path))
+	commit, err := service.cmd.LastCommit(service.resolveMirrorPath(path))
 	if err != nil {
 		return nil
 	}
 
-	return &Commit{
-		SHA:     rev,
-		Author:  author,
-		Message: message,
-		Date:    createdAt,
-	}
+	return &commit
 }
 
 func (service *MirroredRepositories) resolveMirrorPath(path string) string {

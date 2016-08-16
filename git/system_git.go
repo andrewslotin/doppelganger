@@ -84,29 +84,27 @@ func (gitCmd systemGit) CurrentBranch(fullPath string) string {
 	return string(bytes.TrimPrefix(refName, []byte("refs/heads/")))
 }
 
-func (gitCmd systemGit) LastCommit(fullPath string) (rev, author, message string, createdAt time.Time, err error) {
+func (gitCmd systemGit) LastCommit(fullPath string) (commit Commit, err error) {
 	output, err := gitCmd.Exec(fullPath, "log", "-n", "1", "--pretty=%H\n%cn\n%cd\n%s", "--date=format:%FT%T%z")
 	if err != nil {
 		log.Printf("[WARN] git log returned error %s for %s (%s)", err, fullPath, string(output))
-		return "", "", "", time.Time{}, nil
+		return commit, nil
 	}
-
-	log.Println(string(output))
 
 	lines := strings.SplitN(string(output), "\n", 4)
 	if len(lines) < 4 {
 		log.Printf("[WARN] unexpected output from git log for %s (%s)", fullPath, string(output))
-		return "", "", "", time.Time{}, nil
+		return commit, nil
 	}
 
-	rev, author, message = lines[0], lines[1], lines[3]
-
-	createdAt, err = time.Parse(GitCommandDateLayout, lines[2])
+	commit.SHA, commit.Author, commit.Message = lines[0], lines[1], lines[3]
+	commit.Date, err = time.Parse(GitCommandDateLayout, lines[2])
 	if err != nil {
 		log.Printf("[WARN] unexpected date format from git log for %s (%s)", fullPath, lines[2])
+		commit.Date = time.Time{}
 	}
 
-	return rev, author, message, createdAt, nil
+	return commit, nil
 }
 
 func (gitCmd systemGit) CloneMirror(gitURL, fullPath string) error {
