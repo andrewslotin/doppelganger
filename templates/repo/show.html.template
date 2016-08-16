@@ -30,17 +30,23 @@
     </div>
   </div>
 
+  {{ with .LatestMasterCommit }}
   <div class="row">
     <div class="col-md-8 col-md-offset-2 col-sm-12 col-sm-offset-0">
       <h3 class="text-capitalize">Latest master update</h3>
 
       <blockquote>
-        <p>{{ .LatestMasterCommit.Message }}</p>
-        <footer>{{ .LatestMasterCommit.Author }} on {{ .LatestMasterCommit.Date.Format "2006-01-02 15:04 MST" }}</footer>
+        <p>{{ .Message }}</p>
+        <footer>
+          {{ .Author }}
+          {{ if ne .Committer .Author }}via {{ .Committer }}{{ end }}
+          on {{ .Date.Format "2006-01-02 15:04 MST" }}
+        </footer>
       </blockquote>
-      <p>Commit SHA: <samp>{{ .LatestMasterCommit.SHA }}</samp></p>
+      <p>Commit SHA: <samp>{{ .SHA }}</samp></p>
     </div>
   </div>
+  {{ end }}
 
   {{ if .Mirrored }}
   <div class="row">
