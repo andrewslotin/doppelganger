@@ -28,7 +28,11 @@
         {{ range .Repositories }}
         <a href="/{{ .FullName }}" class="list-group-item">
           <h4>{{ .FullName }}</h4>
-          {{ if .Description }}<p class="list-group-item-text">{{ .Description }}</p>{{ end }}
+          {{ if .Description }}
+          <p class="list-group-item-text">{{ .Description }}</p>
+          {{ else if .LatestMasterCommit }}
+          <p class="list-group-item-text">Last commit from {{ .LatestMasterCommit.Date.Format "2006-01-02 15:04 MST" }}</p>
+          {{ end }}
         </a>
         {{ end }}
       </div>

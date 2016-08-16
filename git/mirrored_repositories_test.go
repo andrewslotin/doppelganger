@@ -34,7 +34,7 @@ func (cmd *commandMock) LastCommit(fullPath string) (string, string, string, tim
 	args := cmd.Mock.Called(fullPath)
 
 	var createdAt time.Time
-	if t, err := time.Parse("2006-01-02 15:04:05", args.String(3)); err == nil {
+	if t, err := time.Parse(git.GitCommandDateLayout, args.String(3)); err == nil {
 		createdAt = t
 	}
 
@@ -71,12 +71,20 @@ func TestMirroredRepositories_All(t *testing.T) {
 	cmd.On("IsRepository", filepath.Join(mirrorsDir, "b")).Return(false)
 	cmd.On("IsRepository", filepath.Join(mirrorsDir, "b/b2")).Return(false)
 
+	latestCommit := git.Commit{SHA: "abc123", Author: "Jon Doe", Message: "HI MOM", Date: time.Now().UTC().Truncate(time.Second).Add(-10 * time.Hour)}
 	for repoName, masterBranch := range reposWithBranches {
 		path := filepath.Join(mirrorsDir, repoName)
 		os.MkdirAll(path, 0755)
 
 		cmd.On("IsRepository", path).Return(true)
 		cmd.On("CurrentBranch", path).Return(masterBranch)
+		cmd.On("LastCommit", path).Return(
+			latestCommit.SHA,
+			latestCommit.Author,
+			latestCommit.Message,
+			latestCommit.Date.Format(git.GitCommandDateLayout),
+			nil,
+		)
 	}
 
 	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
@@ -87,6 +95,12 @@ func TestMirroredRepositories_All(t *testing.T) {
 	if assert.Len(t, mirrors, 4) {
 		for _, repo := range mirrors {
 			assert.Equal(t, reposWithBranches[repo.FullName], repo.Master)
+			if assert.NotNil(t, repo.LatestMasterCommit) {
+				assert.Equal(t, latestCommit.SHA, repo.LatestMasterCommit.SHA)
+				assert.Equal(t, latestCommit.Author, repo.LatestMasterCommit.Author)
+				assert.Equal(t, latestCommit.Message, repo.LatestMasterCommit.Message)
+				assert.True(t, repo.LatestMasterCommit.Date.Equal(latestCommit.Date))
+			}
 		}
 	}
 }
@@ -101,7 +115,7 @@ func TestMirroredRepositories_Get_MirrorExists(t *testing.T) {
 	mirroredRepoPath := path.Join(mirrorsDir, "a", "b")
 	cmd.On("IsRepository", mirroredRepoPath).Return(true)
 	cmd.On("CurrentBranch", mirroredRepoPath).Return("production")
-	cmd.On("LastCommit", mirroredRepoPath).Return("abc123", "Jon Doe", "HI MOM", "2016-04-23 16:12:39", nil)
+	cmd.On("LastCommit", mirroredRepoPath).Return("abc123", "Jon Doe", "HI MOM", "2016-04-23T16:12:39+0000", nil)
 
 	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
 	repo, err := mirroredRepos.Get("a/b")
@@ -115,7 +129,7 @@ func TestMirroredRepositories_Get_MirrorExists(t *testing.T) {
 			assert.Equal(t, "abc123", commit.SHA)
 			assert.Equal(t, "Jon Doe", commit.Author)
 			assert.Equal(t, "HI MOM", commit.Message)
-			assert.Equal(t, time.Date(2016, 4, 23, 16, 12, 39, 0, time.UTC), commit.Date)
+			assert.True(t, commit.Date.Equal(time.Date(2016, 4, 23, 16, 12, 39, 0, time.UTC)))
 		}
 	}
 }
