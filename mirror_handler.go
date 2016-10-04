@@ -173,6 +173,7 @@ func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName strin
 	return handler.mirroredRepos.Update(repo.FullName)
 }
 
+// ShowPrivateRepoAccessPage renders a page with public SSH key that can be used for GitHub authentication.
 func (handler *MirrorHandler) ShowPrivateRepoAccessPage(w http.ResponseWriter, repoName, action string) error {
 	pubkey, err := handler.getPublicKey()
 	if err != nil {
