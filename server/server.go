@@ -9,7 +9,7 @@ import (
 	"sync"
 )
 
-// ErrNotRunning is an error returned by (*Server).Shutdown() if the server was not started yet.
+// ErrNotStarted is an error returned by (*Server).Shutdown() if the server was not started yet.
 var ErrNotStarted = errors.New("server not running")
 
 // Server is a type representing an HTTP server.
