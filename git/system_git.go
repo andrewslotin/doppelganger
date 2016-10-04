@@ -47,10 +47,12 @@ func (gitCmd systemGit) Exec(path, command string, args ...string) (output []byt
 	output, err = cmd.Output()
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
-			return nil, errors.New(string(exitErr.Stderr))
+			err = errors.New(string(exitErr.Stderr))
 		} else {
-			return nil, errUnexpectedExit
+			err = errUnexpectedExit
 		}
+
+		return nil, err
 	}
 
 	return bytes.TrimSpace(output), nil
