@@ -1,5 +1,6 @@
 language: go
 go:
+  - 1.8.4
   - 1.9.1
   - tip
 
