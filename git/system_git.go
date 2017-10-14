@@ -71,9 +71,9 @@ func (gitCmd systemGit) IsRepository(path string) bool {
 		return false
 	}
 
-	output, err := gitCmd.Exec(path, "rev-parse", "--is-inside-git-dir")
+	output, err := gitCmd.Exec(path, "rev-parse", "--is-inside-work-tree")
 	if err == errUnexpectedExit {
-		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned %s for %s (%s)", err, path, string(output))
+		log.Printf("[WARN] git rev-parse --is-inside-work-tree returned %s for %s (%s)", err, path, string(output))
 	} else if err != nil {
 		return false
 	}
@@ -84,7 +84,7 @@ func (gitCmd systemGit) IsRepository(path string) bool {
 	case "false":
 		return false
 	default:
-		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned unexpected output for %s: %q", path, string(output))
+		log.Printf("[WARN] git rev-parse --is-inside-work-tree returned unexpected output for %s: %q", path, string(output))
 		return false
 	}
 }
