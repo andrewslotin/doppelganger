@@ -203,6 +203,36 @@ func TestMirroredRepositories_Update(t *testing.T) {
 	cmd.AssertExpectations(t)
 }
 
+func TestMirroredRepositories_Clone_MirrorExists(t *testing.T) {
+	mirrorsDir, teardown, err := setupMirrorsDir()
+	require.NoError(t, err)
+	defer teardown()
+
+	cmd := &commandMock{}
+	cmd.On("IsRepository", path.Join(mirrorsDir, "a", "b")).Return(true)
+	cmd.On("Clone", path.Join(mirrorsDir, "a", "b"), "target").Return(nil)
+
+	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
+	require.NoError(t, mirroredRepos.Clone("a/b", "target"))
+
+	cmd.AssertExpectations(t)
+}
+
+func TestMirroredRepositories_Clone_NotMirrored(t *testing.T) {
+	mirrorsDir, teardown, err := setupMirrorsDir()
+	require.NoError(t, err)
+	defer teardown()
+
+	cmd := &commandMock{}
+	cmd.On("IsRepository", path.Join(mirrorsDir, "a", "b")).Return(false)
+
+	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
+	err = mirroredRepos.Clone("a/b", "target")
+
+	cmd.AssertExpectations(t)
+	assert.Equal(t, git.ErrorNotMirrored, err)
+}
+
 func setupMirrorsDir() (mirrorsPath string, teardownFn func(), err error) {
 	tmpDir, err := ioutil.TempDir(os.TempDir(), "doppelganger")
 	if err != nil {

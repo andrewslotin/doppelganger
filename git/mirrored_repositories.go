@@ -70,6 +70,15 @@ func (service *MirroredRepositories) Update(fullName string) error {
 	return service.cmd.UpdateRemote(service.resolveMirrorPath(fullName))
 }
 
+// Clone clones a mirrored repository into targetDir. This is used to "materialize" bare repositories, which mirror are.
+func (service *MirroredRepositories) Clone(fullName string, targetDir string) error {
+	if !service.cmd.IsRepository(service.resolveMirrorPath(fullName)) {
+		return ErrorNotMirrored
+	}
+
+	return service.cmd.Clone(service.resolveMirrorPath(fullName), targetDir)
+}
+
 func (service *MirroredRepositories) findGitRepos(path string) ([]*Repository, error) {
 	if service.cmd.IsRepository(service.resolveMirrorPath(path)) {
 		return []*Repository{service.repositoryFromDir(path)}, nil
