@@ -40,6 +40,11 @@ func (cmd *commandMock) CloneMirror(gitURL, fullPath string) error {
 	return args.Error(0)
 }
 
+func (cmd *commandMock) Clone(gitURL, fullPath string) error {
+	args := cmd.Mock.Called(gitURL, fullPath)
+	return args.Error(0)
+}
+
 func (cmd *commandMock) UpdateRemote(fullPath string) error {
 	args := cmd.Mock.Called(fullPath)
 	return args.Error(0)
