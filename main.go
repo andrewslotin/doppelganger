@@ -79,6 +79,7 @@ func main() {
 		http.ServeFile(w, r, "./assets/favicon.ico")
 	}))
 
+	mux.Get("/:owner/:repo.tar.gz", NewDownloadMirrorHandler(mirroredRepositoryService))
 	mux.Get("/:owner/:repo", NewRepoHandler(mirroredRepositoryService))
 	mux.Get("/", NewReposHandler(mirroredRepositoryService, true))
 	mux.Get("/src/:owner/:repo", NewRepoHandler(repositoryService))

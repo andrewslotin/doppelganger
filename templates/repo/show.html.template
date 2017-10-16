@@ -64,6 +64,12 @@ git remote add mirror git@&lt;mirror-host&gt;:&lt;mirror-dir&gt;/{{ .FullName }}
 git branch --unset-upstream master
 git branch --set-upstream master mirror/master</pre>
       </p>
+      <p>
+        Alternatively you can download the whole repository as a single archive:
+      </p>
+      <p>
+        <a href="/{{ .FullName }}.tar.gz" class="btn">Download .tar.gz</a>
+      </p>
     </div>
   </div>
 
