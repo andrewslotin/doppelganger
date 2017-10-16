@@ -147,6 +147,24 @@ func (gitCmd systemGit) CloneMirror(gitURL, path string) error {
 	return nil
 }
 
+// Clone performs clone of specified git URL to `path`.
+func (gitCmd systemGit) Clone(gitURL, path string) error {
+	dir, projectName := filepath.Dir(path), filepath.Base(path)
+
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		log.Printf("failed to create %s (%s)", dir, err)
+		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
+	}
+
+	output, err := gitCmd.Exec(dir, "clone", gitURL, projectName)
+	if err != nil {
+		log.Printf("git clone %s to %s returned %s (%s)", gitURL, path, err, string(output))
+		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
+	}
+
+	return nil
+}
+
 // UpdateRemote does `git remote update` in specified `path`.
 func (gitCmd systemGit) UpdateRemote(path string) error {
 	output, err := gitCmd.Exec(path, "remote", "update")
