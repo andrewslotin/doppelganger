@@ -32,7 +32,7 @@ func NewRepoHandler(repositoryService git.RepositoryService) *RepoHandler {
 func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
 
-	repoName, ok := handler.fetchRepoFromRequest(req)
+	repoName, ok := FetchRepoFromRequest(req)
 	if !ok {
 		WriteNotFoundPage(w, "No such repository", "")
 		return
@@ -80,13 +80,4 @@ func (handler *RepoHandler) Show(w http.ResponseWriter, repo *git.Repository) er
 // NewMirror renders a new repository mirror page using templates/repo/mirror.html.template
 func (handler *RepoHandler) NewMirror(w http.ResponseWriter, repo *git.Repository) error {
 	return newMirrorTemplate.Execute(w, repo)
-}
-
-func (handler *RepoHandler) fetchRepoFromRequest(req *http.Request) (string, bool) {
-	owner, repo := req.URL.Query().Get(":owner"), req.URL.Query().Get(":repo")
-	if owner == "" || repo == "" {
-		return "", false
-	}
-
-	return owner + "/" + repo, true
 }
