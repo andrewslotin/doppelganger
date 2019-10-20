@@ -15,7 +15,7 @@ doppelganger-$(VERSION)_$(OS)_$(ARCH).tar.gz: doppelganger
 SOURCES := $(shell find . \( -name '*.go' -and -not -name '*_test.go' \))
 doppelganger: $(SOURCES)
 	@echo "Building v$(VERSION)"
-	GOOS=$(OS) GOARCH=$(ARCH) go build -ldflags "$(LDFLAGS)" -o doppelganger
+	GOOS=$(OS) GOARCH=$(ARCH) go build -mod vendor -ldflags "$(LDFLAGS)" -o doppelganger
 
 clean:
 	go clean ./...
