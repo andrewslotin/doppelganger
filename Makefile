@@ -1,6 +1,7 @@
 VERSION := 1.1.1
 BUILDDATE :=$(shell date +%F)
 LDFLAGS := -X 'main.Version=$(VERSION)' -X 'main.BuildDate=$(BUILDDATE)'
+GOOPTS += -mod vendor
 
 build: test doppelganger
 
@@ -15,13 +16,13 @@ doppelganger-$(VERSION)_$(OS)_$(ARCH).tar.gz: doppelganger
 SOURCES := $(shell find . \( -name '*.go' -and -not -name '*_test.go' \))
 doppelganger: $(SOURCES)
 	@echo "Building v$(VERSION)"
-	GOOS=$(OS) GOARCH=$(ARCH) go build -mod vendor -ldflags "$(LDFLAGS)" -o doppelganger
+	GOOS=$(OS) GOARCH=$(ARCH) go build $(GOOPTS) -ldflags "$(LDFLAGS)" -o doppelganger
 
 clean:
 	go clean ./...
 	rm -rf doppelganger-$(VERSION)_*.tar.gz
 
 test:
-	go test ./...
+	go test $(GOOPTS) ./...
 
 .PHONY: build test release clean
