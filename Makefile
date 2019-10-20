@@ -21,8 +21,7 @@ clean:
 	go clean ./...
 	rm -rf doppelganger-$(VERSION)_*.tar.gz
 
-PACKAGES := $$(go list ./... | grep -v /vendor/ )
 test:
-	go test $(PACKAGES)
+	go test ./...
 
 .PHONY: build test release clean
