@@ -40,26 +40,6 @@ func SystemGit() (systemGit, error) {
 	return systemGit(cmd), nil
 }
 
-// Exec runs specified Git command in path and returns its output. If Git returns a non-zero
-// status, an error is returned and output contains error details.
-func (gitCmd systemGit) Exec(ctx context.Context, path, command string, args ...string) (output []byte, err error) {
-	cmd := exec.CommandContext(ctx, string(gitCmd), append([]string{command}, args...)...)
-	cmd.Dir = path
-
-	output, err = cmd.Output()
-	if err != nil {
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			err = errors.New(string(exitErr.Stderr))
-		} else {
-			err = errUnexpectedExit
-		}
-
-		return nil, err
-	}
-
-	return bytes.TrimSpace(output), nil
-}
-
 // IsRepository checks if there if `path` is a git repository.
 func (gitCmd systemGit) IsRepository(ctx context.Context, path string) bool {
 	if fileInfo, err := os.Stat(path); err != nil {
@@ -73,7 +53,7 @@ func (gitCmd systemGit) IsRepository(ctx context.Context, path string) bool {
 		return false
 	}
 
-	output, err := gitCmd.Exec(ctx, path, "rev-parse", "--is-inside-git-dir")
+	output, err := gitCmd.exec(ctx, path, "rev-parse", "--is-inside-git-dir")
 	if err == errUnexpectedExit {
 		log.Printf("[WARN] git rev-parse --is-inside-git-dir returned %s for %s (%s)", err, path, string(output))
 	} else if err != nil {
@@ -93,7 +73,7 @@ func (gitCmd systemGit) IsRepository(ctx context.Context, path string) bool {
 
 // CurrentBranch returns the name of current branch in `path`.
 func (gitCmd systemGit) CurrentBranch(ctx context.Context, path string) string {
-	refName, err := gitCmd.Exec(ctx, path, "symbolic-ref", "HEAD")
+	refName, err := gitCmd.exec(ctx, path, "symbolic-ref", "HEAD")
 	if err != nil {
 		log.Printf("[WARN] git symbolic-ref HEAD returned %s for %s (%s)", err, path, string(refName))
 		return DefaultMaster
@@ -109,7 +89,7 @@ func (gitCmd systemGit) CurrentBranch(ctx context.Context, path string) string {
 
 // LastCommit returns the latest commit from `path`.
 func (gitCmd systemGit) LastCommit(ctx context.Context, path string) (commit Commit, err error) {
-	output, err := gitCmd.Exec(ctx, path, "log", "-n", "1", "--pretty="+gitPrettyFormat, "--date="+gitDateFormat)
+	output, err := gitCmd.exec(ctx, path, "log", "-n", "1", "--pretty="+gitPrettyFormat, "--date="+gitDateFormat)
 	if err != nil {
 		log.Printf("[WARN] git log returned error %s for %s (%s)", err, path, string(output))
 		return commit, nil
@@ -140,7 +120,7 @@ func (gitCmd systemGit) CloneMirror(ctx context.Context, gitURL, path string) er
 		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
 	}
 
-	output, err := gitCmd.Exec(ctx, dir, "clone", "--mirror", gitURL, projectName)
+	output, err := gitCmd.exec(ctx, dir, "clone", "--mirror", gitURL, projectName)
 	if err != nil {
 		log.Printf("git clone --mirror %s to %s returned %s (%s)", gitURL, path, err, string(output))
 		return fmt.Errorf("failed to clone %s to %s", gitURL, path)
@@ -151,11 +131,29 @@ func (gitCmd systemGit) CloneMirror(ctx context.Context, gitURL, path string) er
 
 // UpdateRemote does `git remote update` in specified `path`.
 func (gitCmd systemGit) UpdateRemote(ctx context.Context, path string) error {
-	output, err := gitCmd.Exec(ctx, path, "remote", "update")
+	output, err := gitCmd.exec(ctx, path, "remote", "update")
 	if err != nil {
 		log.Printf("[WARN] git remote update returned %s for %s (%s)", err, path, string(output))
 		return errors.New("update failed")
 	}
 
 	return nil
+}
+
+func (gitCmd systemGit) exec(ctx context.Context, path, command string, args ...string) (output []byte, err error) {
+	cmd := exec.CommandContext(ctx, string(gitCmd), append([]string{command}, args...)...)
+	cmd.Dir = path
+
+	output, err = cmd.Output()
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			err = errors.New(string(exitErr.Stderr))
+		} else {
+			err = errUnexpectedExit
+		}
+
+		return nil, err
+	}
+
+	return bytes.TrimSpace(output), nil
 }
