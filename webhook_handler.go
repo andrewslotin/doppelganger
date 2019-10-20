@@ -84,5 +84,5 @@ func (handler *WebhookHandler) UpdateRepo(ctx context.Context, req *http.Request
 		return repo, nil
 	}
 
-	return repo, handler.mirroredRepos.Update(repo.FullName)
+	return repo, handler.mirroredRepos.Update(ctx, repo.FullName)
 }

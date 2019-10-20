@@ -152,7 +152,7 @@ func (handler *MirrorHandler) CreateMirror(ctx context.Context, w http.ResponseW
 		return err
 	}
 
-	return handler.mirroredRepos.Create(repo.FullName, repo.GitURL)
+	return handler.mirroredRepos.Create(ctx, repo.FullName, repo.GitURL)
 }
 
 // SetupChangeTracking searches for a repository in githubRepos and sets up changes tracker using trackingService.Track().
@@ -172,7 +172,7 @@ func (handler *MirrorHandler) UpdateMirror(ctx context.Context, w http.ResponseW
 		return err
 	}
 
-	return handler.mirroredRepos.Update(repo.FullName)
+	return handler.mirroredRepos.Update(ctx, repo.FullName)
 }
 
 // ShowPrivateRepoAccessPage renders a page with public SSH key that can be used for GitHub authentication.

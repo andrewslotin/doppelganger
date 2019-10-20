@@ -21,27 +21,27 @@ type commandMock struct {
 	mock.Mock
 }
 
-func (cmd *commandMock) IsRepository(fullPath string) bool {
+func (cmd *commandMock) IsRepository(ctx context.Context, fullPath string) bool {
 	args := cmd.Mock.Called(fullPath)
 	return args.Bool(0)
 }
 
-func (cmd *commandMock) CurrentBranch(fullPath string) string {
+func (cmd *commandMock) CurrentBranch(ctx context.Context, fullPath string) string {
 	args := cmd.Mock.Called(fullPath)
 	return args.String(0)
 }
 
-func (cmd *commandMock) LastCommit(fullPath string) (git.Commit, error) {
+func (cmd *commandMock) LastCommit(ctx context.Context, fullPath string) (git.Commit, error) {
 	args := cmd.Mock.Called(fullPath)
 	return args.Get(0).(git.Commit), args.Error(1)
 }
 
-func (cmd *commandMock) CloneMirror(gitURL, fullPath string) error {
+func (cmd *commandMock) CloneMirror(ctx context.Context, gitURL, fullPath string) error {
 	args := cmd.Mock.Called(gitURL, fullPath)
 	return args.Error(0)
 }
 
-func (cmd *commandMock) UpdateRemote(fullPath string) error {
+func (cmd *commandMock) UpdateRemote(ctx context.Context, fullPath string) error {
 	args := cmd.Mock.Called(fullPath)
 	return args.Error(0)
 }
@@ -163,7 +163,7 @@ func TestMirroredRepositories_Create(t *testing.T) {
 	cmd.On("CloneMirror", "git@doppelganger:a/b", path.Join(mirrorsDir, "a", "b")).Return(nil)
 
 	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
-	require.NoError(t, mirroredRepos.Create("a/b", "git@doppelganger:a/b"))
+	require.NoError(t, mirroredRepos.Create(context.Background(), "a/b", "git@doppelganger:a/b"))
 
 	cmd.AssertExpectations(t)
 }
@@ -180,7 +180,7 @@ func TestMirroredRepositories_Create_DirExists(t *testing.T) {
 	cmd.On("CloneMirror", "git@doppelganger:a/b", mirroredRepoPath).Return(nil)
 
 	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
-	require.NoError(t, mirroredRepos.Create("a/b", "git@doppelganger:a/b"))
+	require.NoError(t, mirroredRepos.Create(context.Background(), "a/b", "git@doppelganger:a/b"))
 
 	cmd.AssertExpectations(t)
 }
@@ -194,7 +194,7 @@ func TestMirroredRepositories_Update(t *testing.T) {
 	cmd.On("UpdateRemote", path.Join(mirrorsDir, "a", "b")).Return(nil)
 
 	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
-	require.NoError(t, mirroredRepos.Update("a/b"))
+	require.NoError(t, mirroredRepos.Update(context.Background(), "a/b"))
 
 	cmd.AssertExpectations(t)
 }

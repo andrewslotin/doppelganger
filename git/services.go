@@ -16,8 +16,8 @@ type RepositoryService interface {
 type MirrorService interface {
 	RepositoryService
 
-	Create(name, url string) error
-	Update(name string) error
+	Create(ctx context.Context, name, url string) error
+	Update(ctx context.Context, name string) error
 }
 
 // TrackingService is a type that wraps Track method.
