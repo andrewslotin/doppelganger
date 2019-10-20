@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/net/context"
 )
 
 /* ************ Tests objects ************ */
@@ -82,7 +83,7 @@ func TestMirroredRepositories_All(t *testing.T) {
 	}
 
 	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
-	mirrors, err := mirroredRepos.All()
+	mirrors, err := mirroredRepos.All(context.Background())
 	require.NoError(t, err)
 	cmd.AssertExpectations(t)
 
@@ -121,7 +122,7 @@ func TestMirroredRepositories_Get_MirrorExists(t *testing.T) {
 	cmd.On("LastCommit", mirroredRepoPath).Return(lastCommit, nil)
 
 	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
-	repo, err := mirroredRepos.Get("a/b")
+	repo, err := mirroredRepos.Get(context.Background(), "a/b")
 	require.NoError(t, err)
 
 	if cmd.AssertExpectations(t) {
@@ -147,7 +148,7 @@ func TestMirroredRepositories_Get_NotMirrored(t *testing.T) {
 	cmd.On("IsRepository", path.Join(mirrorsDir, "a", "b")).Return(false)
 
 	mirroredRepos := git.NewMirroredRepositories(mirrorsDir, cmd)
-	_, err = mirroredRepos.Get("a/b")
+	_, err = mirroredRepos.Get(context.Background(), "a/b")
 
 	cmd.AssertExpectations(t)
 	assert.Equal(t, err, git.ErrorNotMirrored)

@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/andrewslotin/doppelganger/git"
+	"golang.org/x/net/context"
 )
 
 // WebhookHandler is a type that implements http.Handler interface and is used by HTTP server to handle GitHub webhooks sent to "/apihook".
@@ -29,13 +30,15 @@ func NewWebhookHandler(mirroredRepos git.MirrorService) *WebhookHandler {
 
 func (handler *WebhookHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
+	ctx := req.Context()
+
 	defer req.Body.Close()
 
 	switch event := req.Header.Get("X-Github-Event"); event {
 	case "ping":
 		fmt.Fprint(w, "PONG")
 	case "push":
-		switch repo, err := handler.UpdateRepo(req); err {
+		switch repo, err := handler.UpdateRepo(ctx, req); err {
 		case nil:
 			log.Printf("updated %s [%s]", repo.FullName, time.Since(startTime))
 			fmt.Fprint(w, "OK")
@@ -50,7 +53,7 @@ func (handler *WebhookHandler) ServeHTTP(w http.ResponseWriter, req *http.Reques
 }
 
 // UpdateRepo handles "push" event and updates existing GitHub repository mirrors synchronizing it with remote.
-func (handler *WebhookHandler) UpdateRepo(req *http.Request) (repo *git.Repository, err error) {
+func (handler *WebhookHandler) UpdateRepo(ctx context.Context, req *http.Request) (repo *git.Repository, err error) {
 	body, err := ioutil.ReadAll(req.Body)
 	if err != nil {
 		log.Printf("failed to read request body (%s)", err)
@@ -69,7 +72,7 @@ func (handler *WebhookHandler) UpdateRepo(req *http.Request) (repo *git.Reposito
 		return nil, err
 	}
 
-	repo, err = handler.mirroredRepos.Get(updateEvent.Repository.FullName)
+	repo, err = handler.mirroredRepos.Get(ctx, updateEvent.Repository.FullName)
 	if err != nil {
 		log.Printf("failed to find mirrored copy of %s (%s)", updateEvent.Repository.FullName, err)
 		return nil, err

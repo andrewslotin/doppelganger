@@ -11,6 +11,7 @@ import (
 
 	"github.com/andrewslotin/doppelganger/git"
 	"github.com/andrewslotin/doppelganger/git/gitssh"
+	"golang.org/x/net/context"
 )
 
 var (
@@ -44,6 +45,7 @@ func NewMirrorHandler(githubRepos git.RepositoryService, mirroredRepos git.Mirro
 
 func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
+	ctx := req.Context()
 
 	repoName, ok := handler.fetchRepoFromRequest(req)
 	if !ok {
@@ -53,7 +55,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 
 	switch action := strings.ToLower(req.FormValue("action")); action {
 	case "create":
-		if err := handler.CreateMirror(w, repoName); err != nil {
+		if err := handler.CreateMirror(ctx, w, repoName); err != nil {
 			if err == git.ErrorNotFound {
 				err = handler.ShowPrivateRepoAccessPage(w, repoName, action)
 				if err == nil {
@@ -76,7 +78,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		}
 
 		if req.FormValue("notrack") == "" && handler.trackRepoService != nil {
-			if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
+			if err := handler.SetupChangeTracking(ctx, w, req, repoName); err != nil {
 				if err == git.ErrorNotMirrored {
 					WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 				} else {
@@ -96,7 +98,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 		log.Printf("mirrored %s [%s]", repoName, time.Since(startTime))
 		handler.redirectToRepository(w, req, repoName)
 	case "update":
-		if err := handler.UpdateMirror(w, repoName); err != nil {
+		if err := handler.UpdateMirror(ctx, w, repoName); err != nil {
 			if err == git.ErrorNotMirrored {
 				WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 			} else {
@@ -120,7 +122,7 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 			return
 		}
 
-		if err := handler.SetupChangeTracking(w, req, repoName); err != nil {
+		if err := handler.SetupChangeTracking(ctx, w, req, repoName); err != nil {
 			if err == git.ErrorNotMirrored {
 				WriteNotFoundPage(w, fmt.Sprintf("Repository %s was not mirrored yet", repoName), "/src/"+repoName)
 			} else {
@@ -144,8 +146,8 @@ func (handler *MirrorHandler) ServeHTTP(w http.ResponseWriter, req *http.Request
 }
 
 // CreateMirror searches for a repository in githubRepos and creates its mirror.
-func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName string) error {
-	repo, err := handler.githubRepos.Get(repoName)
+func (handler *MirrorHandler) CreateMirror(ctx context.Context, w http.ResponseWriter, repoName string) error {
+	repo, err := handler.githubRepos.Get(ctx, repoName)
 	if err != nil {
 		return err
 	}
@@ -154,18 +156,18 @@ func (handler *MirrorHandler) CreateMirror(w http.ResponseWriter, repoName strin
 }
 
 // SetupChangeTracking searches for a repository in githubRepos and sets up changes tracker using trackingService.Track().
-func (handler *MirrorHandler) SetupChangeTracking(w http.ResponseWriter, req *http.Request, repoName string) error {
-	repo, err := handler.mirroredRepos.Get(repoName)
+func (handler *MirrorHandler) SetupChangeTracking(ctx context.Context, w http.ResponseWriter, req *http.Request, repoName string) error {
+	repo, err := handler.mirroredRepos.Get(ctx, repoName)
 	if err != nil {
 		return err
 	}
 
-	return handler.trackRepoService.Track(repo.FullName, apiHookURL(req.Host, req.TLS != nil).String())
+	return handler.trackRepoService.Track(ctx, repo.FullName, apiHookURL(req.Host, req.TLS != nil).String())
 }
 
 // UpdateMirror updates an existing mirror synchronizing its with source.
-func (handler *MirrorHandler) UpdateMirror(w http.ResponseWriter, repoName string) error {
-	repo, err := handler.mirroredRepos.Get(repoName)
+func (handler *MirrorHandler) UpdateMirror(ctx context.Context, w http.ResponseWriter, repoName string) error {
+	repo, err := handler.mirroredRepos.Get(ctx, repoName)
 	if err != nil {
 		return err
 	}

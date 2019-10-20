@@ -1,11 +1,13 @@
 package git
 
+import "golang.org/x/net/context"
+
 // RepositoryService is a type that wraps All and Get methods.
 //
 // Repository service is used to list and lookup repositories. Two implementations
 type RepositoryService interface {
-	All() ([]*Repository, error)
-	Get(name string) (*Repository, error)
+	All(ctx context.Context) ([]*Repository, error)
+	Get(ctx context.Context, name string) (*Repository, error)
 }
 
 // MirrorService is a type that extends RepositoryService adding two more methods: Create and Update.
@@ -22,5 +24,5 @@ type MirrorService interface {
 //
 // Tracking service is used to set up tracking changes in a repository.
 type TrackingService interface {
-	Track(name, callbackURL string) error
+	Track(ctx context.Context, name, callbackURL string) error
 }

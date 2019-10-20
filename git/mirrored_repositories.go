@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/net/context"
 )
 
 // DefaultMaster is a default name for master branch.
@@ -33,13 +35,13 @@ func NewMirroredRepositories(path string, gitCommand Command) *MirroredRepositor
 
 // All recursively searches and returns a list of repositories under mirrorPath. Unlike Get, All returns
 // only basic information about Git repository, such as its name and the name of master branch.
-func (service *MirroredRepositories) All() ([]*Repository, error) {
+func (service *MirroredRepositories) All(ctx context.Context) ([]*Repository, error) {
 	return service.findGitRepos("")
 }
 
 // Get searches for a git repository in <mirrorPath>/<fullName> and returns the name of its name, master branch
 // and lastest commit. If specified directory does not exist or not a git repository ErrorNotMirrored is returned.
-func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
+func (service *MirroredRepositories) Get(ctx context.Context, fullName string) (*Repository, error) {
 	if !service.cmd.IsRepository(service.resolveMirrorPath(fullName)) {
 		return nil, ErrorNotMirrored
 	}

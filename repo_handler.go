@@ -31,6 +31,7 @@ func NewRepoHandler(repositoryService git.RepositoryService) *RepoHandler {
 
 func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
+	ctx := req.Context()
 
 	repoName, ok := handler.fetchRepoFromRequest(req)
 	if !ok {
@@ -40,7 +41,7 @@ func (handler *RepoHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 
 	switch req.Method {
 	case "GET":
-		switch repo, err := handler.repositories.Get(repoName); err {
+		switch repo, err := handler.repositories.Get(ctx, repoName); err {
 		case git.ErrorNotFound: // GitHub repository not found
 			WriteNotFoundPage(w, fmt.Sprintf("No such repository %q", repoName), req.Referer())
 		case git.ErrorNotMirrored: // Mirror repository not found, offer to create a new one

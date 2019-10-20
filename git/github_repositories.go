@@ -53,7 +53,7 @@ func NewGithubRepositories(ctx context.Context) (*GithubRepositories, error) {
 }
 
 // All returns a list of GitHub repositories accessible with provided API token.
-func (service *GithubRepositories) All() ([]*Repository, error) {
+func (service *GithubRepositories) All(ctx context.Context) ([]*Repository, error) {
 	opts := &api.RepositoryListOptions{
 		ListOptions: api.ListOptions{
 			PerPage: 50,
@@ -64,7 +64,7 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 
 	paginatedRepos := make([]*Repository, 0, opts.ListOptions.PerPage)
 	for {
-		githubRepos, response, err := service.client.Repositories.List("", opts)
+		githubRepos, response, err := service.client.Repositories.List(ctx, "", opts)
 		if err != nil {
 			return nil, err
 		}
@@ -113,10 +113,10 @@ func (service *GithubRepositories) All() ([]*Repository, error) {
 }
 
 // Get retireves GitHub repositories details and returns an instance of Repository containing last commit information.
-func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
+func (service *GithubRepositories) Get(ctx context.Context, fullName string) (*Repository, error) {
 	repoOwner, repoName := ParseRepositoryName(fullName)
 
-	githubRepo, response, err := service.client.Repositories.Get(repoOwner, repoName)
+	githubRepo, response, err := service.client.Repositories.Get(ctx, repoOwner, repoName)
 	if err != nil {
 		if response.StatusCode == http.StatusNotFound {
 			return nil, ErrorNotFound
@@ -125,12 +125,12 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 		return nil, err
 	}
 
-	masterBranch, _, err := service.client.Repositories.GetBranch(repoOwner, repoName, *githubRepo.DefaultBranch)
+	masterBranch, _, err := service.client.Repositories.GetBranch(ctx, repoOwner, repoName, *githubRepo.DefaultBranch)
 	if err != nil {
 		return nil, err
 	}
 
-	lastCommit, _, err := service.client.Git.GetCommit(repoOwner, repoName, *masterBranch.Commit.SHA)
+	lastCommit, _, err := service.client.Git.GetCommit(ctx, repoOwner, repoName, *masterBranch.Commit.SHA)
 	if err != nil {
 		return nil, err
 	}
@@ -142,12 +142,12 @@ func (service *GithubRepositories) Get(fullName string) (*Repository, error) {
 }
 
 // Track sets up "push" event GitHub webhook to be sent to callbackURL.
-func (service *GithubRepositories) Track(fullName, callbackURL string) error {
+func (service *GithubRepositories) Track(ctx context.Context, fullName, callbackURL string) error {
 	owner, name := ParseRepositoryName(fullName)
-	return service.registerPushWebhook(owner, name, callbackURL)
+	return service.registerPushWebhook(ctx, owner, name, callbackURL)
 }
 
-func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string) error {
+func (service *GithubRepositories) registerPushWebhook(ctx context.Context, owner, repo, cbURL string) error {
 	hook := &api.Hook{
 		Name:   new(string),
 		Active: new(bool),
@@ -160,7 +160,7 @@ func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string
 	*hook.Name = "web"
 	*hook.Active = true
 
-	_, _, err := service.client.Repositories.CreateHook(owner, repo, hook)
+	_, _, err := service.client.Repositories.CreateHook(ctx, owner, repo, hook)
 	if err != nil {
 		errorResponse, ok := err.(*api.ErrorResponse)
 		if !ok || errorResponse.Message != "Validation Failed" {
@@ -171,7 +171,7 @@ func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string
 			return err
 		}
 
-		if service.checkPushWebhookExists(owner, repo, cbURL) {
+		if service.checkPushWebhookExists(ctx, owner, repo, cbURL) {
 			log.Printf("push webhook to %s for %s/%s has already been set up", cbURL, owner, repo)
 			return nil
 		}
@@ -180,13 +180,13 @@ func (service *GithubRepositories) registerPushWebhook(owner, repo, cbURL string
 	return err
 }
 
-func (service *GithubRepositories) checkPushWebhookExists(owner, repo, cbURL string) bool {
+func (service *GithubRepositories) checkPushWebhookExists(ctx context.Context, owner, repo, cbURL string) bool {
 	opts := &api.ListOptions{
 		PerPage: 50,
 	}
 
 	for {
-		hooks, response, err := service.client.Repositories.ListHooks(owner, repo, opts)
+		hooks, response, err := service.client.Repositories.ListHooks(ctx, owner, repo, opts)
 		if err != nil {
 			log.Printf("[WARN] failed to get %s/%s webhooks: %s", owner, repo, err)
 			return false
