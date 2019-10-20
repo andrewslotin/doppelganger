@@ -30,8 +30,9 @@ func NewReposHandler(repositoryService git.RepositoryService, mirrors bool) *Rep
 
 func (handler *ReposHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	startTime := time.Now()
+	ctx := req.Context()
 
-	repos, err := handler.repositories.All()
+	repos, err := handler.repositories.All(ctx)
 	if err != nil {
 		log.Printf("failed to get repos (%s) %v", err, req)
 		WriteErrorPage(w, UserError{Message: "Internal server error", BackURL: req.Referer(), OriginalError: err}, http.StatusInternalServerError)

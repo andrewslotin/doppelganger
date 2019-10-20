@@ -3,5 +3,8 @@ go:
   - 1.13.3
   - tip
 
+env:
+- GO111MODULE=on
+
 install:
  - go get github.com/stretchr/testify

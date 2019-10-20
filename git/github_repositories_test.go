@@ -59,7 +59,7 @@ func TestGithubRepositoriesAll_SingleRepository_DefaultFields(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	repos, err := githubRepos.All()
+	repos, err := githubRepos.All(context.Background())
 	require.NoError(t, err)
 
 	if assert.Len(t, repos, 1) {
@@ -90,7 +90,7 @@ func TestGithubRepositoriesAll_SingleRepository_AllFields(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	repos, err := githubRepos.All()
+	repos, err := githubRepos.All(context.Background())
 	require.NoError(t, err)
 
 	if assert.Len(t, repos, 1) {
@@ -120,7 +120,7 @@ func TestGithubRepositoriesAll_MultipleRepositories(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	repos, err := githubRepos.All()
+	repos, err := githubRepos.All(context.Background())
 	require.NoError(t, err)
 
 	assert.Len(t, repos, 2)
@@ -142,7 +142,7 @@ func TestGithubRepositoriesAll_SkipWithoutGitURL(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	repos, err := githubRepos.All()
+	repos, err := githubRepos.All(context.Background())
 	require.NoError(t, err)
 
 	if assert.Len(t, repos, 1, "Should exclude one repository without git_url") {
@@ -166,7 +166,7 @@ func TestGithubRepositoriesAll_SkipWithoutFullName(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	repos, err := githubRepos.All()
+	repos, err := githubRepos.All(context.Background())
 	require.NoError(t, err)
 
 	if assert.Len(t, repos, 1, "Should exclude one repository without full_name") {
@@ -194,7 +194,7 @@ func TestGithubRepositoriesAll_HandlePagination(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	repos, err := githubRepos.All()
+	repos, err := githubRepos.All(context.Background())
 	require.NoError(t, err)
 
 	assert.Len(t, repos, 2)
@@ -234,7 +234,7 @@ func TestGithubRepositoriesGet_RepositoryExists_PublicRepo(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	repo, err := githubRepos.Get("user1/repo1")
+	repo, err := githubRepos.Get(context.Background(), "user1/repo1")
 	require.NoError(t, err)
 
 	assert.Equal(t, repo.FullName, "user1/repo1")
@@ -287,7 +287,7 @@ func TestGithubRepositoriesGet_RepositoryExists_PrivateRepo(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	repo, err := githubRepos.Get("user1/repo1")
+	repo, err := githubRepos.Get(context.Background(), "user1/repo1")
 	require.NoError(t, err)
 
 	assert.Equal(t, repo.FullName, "user1/repo1")
@@ -301,7 +301,7 @@ func TestGithubRepositoriesGet_NotFound(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	_, err = githubRepos.Get("user1/repo1")
+	_, err = githubRepos.Get(context.Background(), "user1/repo1")
 	assert.Equal(t, err, git.ErrorNotFound)
 }
 
@@ -329,7 +329,7 @@ func TestGithubRepositoriesTrack(t *testing.T) {
 	githubRepos, err := git.NewGithubRepositories(ctx)
 	require.NoError(t, err)
 
-	err = githubRepos.Track("user1/repo1", "http://example.com/cb")
+	err = githubRepos.Track(context.Background(), "user1/repo1", "http://example.com/cb")
 	require.NoError(t, err)
 }
 
@@ -338,7 +338,7 @@ func setup() (ctx context.Context, mux *http.ServeMux, teardownFn func()) {
 	server := httptest.NewServer(mux)
 
 	client := github.NewClient(nil)
-	url, _ := url.Parse(server.URL)
+	url, _ := url.Parse(server.URL + "/")
 	client.BaseURL = url
 
 	ctx = context.Background()

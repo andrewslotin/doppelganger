@@ -7,6 +7,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"golang.org/x/net/context"
 )
 
 // DefaultMaster is a default name for master branch.
@@ -33,25 +35,25 @@ func NewMirroredRepositories(path string, gitCommand Command) *MirroredRepositor
 
 // All recursively searches and returns a list of repositories under mirrorPath. Unlike Get, All returns
 // only basic information about Git repository, such as its name and the name of master branch.
-func (service *MirroredRepositories) All() ([]*Repository, error) {
-	return service.findGitRepos("")
+func (service *MirroredRepositories) All(ctx context.Context) ([]*Repository, error) {
+	return service.findGitRepos(ctx, "")
 }
 
 // Get searches for a git repository in <mirrorPath>/<fullName> and returns the name of its name, master branch
 // and lastest commit. If specified directory does not exist or not a git repository ErrorNotMirrored is returned.
-func (service *MirroredRepositories) Get(fullName string) (*Repository, error) {
-	if !service.cmd.IsRepository(service.resolveMirrorPath(fullName)) {
+func (service *MirroredRepositories) Get(ctx context.Context, fullName string) (*Repository, error) {
+	if !service.cmd.IsRepository(ctx, service.resolveMirrorPath(fullName)) {
 		return nil, ErrorNotMirrored
 	}
 
-	repo := service.repositoryFromDir(fullName)
-	repo.LatestMasterCommit = service.commitFromDir(fullName)
+	repo := service.repositoryFromDir(ctx, fullName)
+	repo.LatestMasterCommit = service.commitFromDir(ctx, fullName)
 
 	return repo, nil
 }
 
 // Create creates a local mirror of remote repository from gitURL by calling "git --mirror <gitURL> <fullName>".
-func (service *MirroredRepositories) Create(fullName, gitURL string) error {
+func (service *MirroredRepositories) Create(ctx context.Context, fullName, gitURL string) error {
 	fullPath := service.resolveMirrorPath(fullName)
 
 	if _, err := os.Stat(fullPath); err == nil {
@@ -61,18 +63,18 @@ func (service *MirroredRepositories) Create(fullName, gitURL string) error {
 		}
 	}
 
-	return service.cmd.CloneMirror(gitURL, fullPath)
+	return service.cmd.CloneMirror(ctx, gitURL, fullPath)
 }
 
 // Update downloads latest changes from remote repository into a local mirror discarding any changes that were pushed
 // to mirror only. Update calls "git remote update" in <mirrorPath>/<fullName>.
-func (service *MirroredRepositories) Update(fullName string) error {
-	return service.cmd.UpdateRemote(service.resolveMirrorPath(fullName))
+func (service *MirroredRepositories) Update(ctx context.Context, fullName string) error {
+	return service.cmd.UpdateRemote(ctx, service.resolveMirrorPath(fullName))
 }
 
-func (service *MirroredRepositories) findGitRepos(path string) ([]*Repository, error) {
-	if service.cmd.IsRepository(service.resolveMirrorPath(path)) {
-		return []*Repository{service.repositoryFromDir(path)}, nil
+func (service *MirroredRepositories) findGitRepos(ctx context.Context, path string) ([]*Repository, error) {
+	if service.cmd.IsRepository(ctx, service.resolveMirrorPath(path)) {
+		return []*Repository{service.repositoryFromDir(ctx, path)}, nil
 	}
 
 	entries, err := ioutil.ReadDir(filepath.Join(service.mirrorPath, path))
@@ -86,7 +88,7 @@ func (service *MirroredRepositories) findGitRepos(path string) ([]*Repository, e
 			continue
 		}
 
-		r, err := service.findGitRepos(filepath.Join(path, entry.Name()))
+		r, err := service.findGitRepos(ctx, filepath.Join(path, entry.Name()))
 		if err != nil {
 			return nil, err
 		}
@@ -96,16 +98,16 @@ func (service *MirroredRepositories) findGitRepos(path string) ([]*Repository, e
 	return repos, nil
 }
 
-func (service *MirroredRepositories) repositoryFromDir(path string) *Repository {
+func (service *MirroredRepositories) repositoryFromDir(ctx context.Context, path string) *Repository {
 	return &Repository{
 		FullName:           path,
-		Master:             service.cmd.CurrentBranch(service.resolveMirrorPath(path)),
-		LatestMasterCommit: service.commitFromDir(path),
+		Master:             service.cmd.CurrentBranch(ctx, service.resolveMirrorPath(path)),
+		LatestMasterCommit: service.commitFromDir(ctx, path),
 	}
 }
 
-func (service *MirroredRepositories) commitFromDir(path string) *Commit {
-	commit, err := service.cmd.LastCommit(service.resolveMirrorPath(path))
+func (service *MirroredRepositories) commitFromDir(ctx context.Context, path string) *Commit {
+	commit, err := service.cmd.LastCommit(ctx, service.resolveMirrorPath(path))
 	if err != nil {
 		return nil
 	}
